@@ -164,14 +164,32 @@ class MeasurementItem(BaseModel):
     blouse_type: Optional[str] = None  # with_cups / without_cups
     front_neck_design: Optional[str] = None
     back_neck_design: Optional[str] = None
-    chest: Optional[str] = None
-    waist: Optional[str] = None
-    hip: Optional[str] = None
+    # Garment options
+    padded: Optional[str] = None  # yes / no
+    princess_cut: Optional[str] = None  # yes / no
+    open_style: Optional[str] = None  # front / back
+    # Main measurements
+    length: Optional[str] = None
     shoulder: Optional[str] = None
     sleeve_length: Optional[str] = None
+    arm_round: Optional[str] = None
+    bicep: Optional[str] = None
+    upper_chest: Optional[str] = None
+    chest: Optional[str] = None
+    waist: Optional[str] = None
+    point: Optional[str] = None
+    bust_length: Optional[str] = None
+    front_length: Optional[str] = None
+    cross_front: Optional[str] = None
+    back_deep_balance: Optional[str] = None
+    cross_back: Optional[str] = None
     sleeve_round: Optional[str] = None
+    # Neckline measurements
+    front_neck: Optional[str] = None
+    back_neck: Optional[str] = None
+    # Legacy fields kept for backward compat
+    hip: Optional[str] = None
     armhole: Optional[str] = None
-    length: Optional[str] = None
     neck_depth_front: Optional[str] = None
     neck_depth_back: Optional[str] = None
     additional_notes: Optional[str] = None
@@ -641,10 +659,21 @@ async def upload_employee_document(employee_id: str, file: UploadFile = File(...
         raise HTTPException(status_code=500, detail="Failed to upload document")
 
 @api_router.get("/employees/{employee_id}/documents/{doc_id}")
-async def get_employee_document(employee_id: str, doc_id: str, request: Request):
-    user = await get_current_user(request)
-    if user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
+async def get_employee_document(employee_id: str, doc_id: str, request: Request, token: Optional[str] = None):
+    # Support token via query param for direct browser access (new tab)
+    if token:
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            if payload.get("role") != "admin":
+                raise HTTPException(status_code=403, detail="Admin access required")
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Token expired")
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    else:
+        user = await get_current_user(request)
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
     
     # Find employee and document
     employee = await db.employees.find_one({"_id": ObjectId(employee_id)})

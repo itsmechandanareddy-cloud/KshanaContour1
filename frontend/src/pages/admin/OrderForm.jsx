@@ -41,16 +41,29 @@ const defaultItem = {
   blouse_type: "without_cups",
   front_neck_design: "",
   back_neck_design: "",
-  chest: "",
-  waist: "",
-  hip: "",
+  // Garment options
+  padded: "no",
+  princess_cut: "no",
+  open_style: "back",
+  // Main measurements
+  length: "",
   shoulder: "",
   sleeve_length: "",
+  arm_round: "",
+  bicep: "",
+  upper_chest: "",
+  chest: "",
+  waist: "",
+  point: "",
+  bust_length: "",
+  front_length: "",
+  cross_front: "",
+  back_deep_balance: "",
+  cross_back: "",
   sleeve_round: "",
-  armhole: "",
-  length: "",
-  neck_depth_front: "",
-  neck_depth_back: "",
+  // Neckline measurements
+  front_neck: "",
+  back_neck: "",
   additional_notes: "",
   cost: 0
 };
@@ -482,6 +495,61 @@ const OrderForm = () => {
                   </div>
                 )}
 
+                {/* Garment Options */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[#5C504A]">Padded</Label>
+                    <RadioGroup
+                      value={item.padded || "no"}
+                      onValueChange={(value) => handleItemChange(index, "padded", value)}
+                      className="flex gap-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id={`padded-yes-${index}`} />
+                        <Label htmlFor={`padded-yes-${index}`} className="font-normal">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id={`padded-no-${index}`} />
+                        <Label htmlFor={`padded-no-${index}`} className="font-normal">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[#5C504A]">Princess Cut</Label>
+                    <RadioGroup
+                      value={item.princess_cut || "no"}
+                      onValueChange={(value) => handleItemChange(index, "princess_cut", value)}
+                      className="flex gap-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id={`princess-yes-${index}`} />
+                        <Label htmlFor={`princess-yes-${index}`} className="font-normal">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id={`princess-no-${index}`} />
+                        <Label htmlFor={`princess-no-${index}`} className="font-normal">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[#5C504A]">Open</Label>
+                    <RadioGroup
+                      value={item.open_style || "back"}
+                      onValueChange={(value) => handleItemChange(index, "open_style", value)}
+                      className="flex gap-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="front" id={`open-front-${index}`} />
+                        <Label htmlFor={`open-front-${index}`} className="font-normal">Front</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="back" id={`open-back-${index}`} />
+                        <Label htmlFor={`open-back-${index}`} className="font-normal">Back</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+
                 {/* Neck Designs */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -507,40 +575,77 @@ const OrderForm = () => {
                 </div>
 
                 {/* Measurements Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { key: "chest", label: "Chest" },
-                    { key: "waist", label: "Waist" },
-                    { key: "hip", label: "Hip" },
-                    { key: "shoulder", label: "Shoulder" },
-                    { key: "sleeve_length", label: "Sleeve Length" },
-                    { key: "sleeve_round", label: "Sleeve Round" },
-                    { key: "armhole", label: "Armhole" },
-                    { key: "length", label: "Length" },
-                    { key: "neck_depth_front", label: "Neck Depth (Front)" },
-                    { key: "neck_depth_back", label: "Neck Depth (Back)" },
-                  ].map(({ key, label }) => (
-                    <div key={key} className="space-y-1">
-                      <Label className="text-xs text-[#8A7D76]">{label}</Label>
+                <div>
+                  <Label className="text-[#5C504A] text-sm font-semibold mb-3 block">Body Measurements</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {[
+                      { key: "length", label: "Length" },
+                      { key: "shoulder", label: "Shoulder" },
+                      { key: "sleeve_length", label: "Sleeve Length" },
+                      { key: "arm_round", label: "Arm Round" },
+                      { key: "bicep", label: "Bicep" },
+                      { key: "upper_chest", label: "Upper Chest" },
+                      { key: "chest", label: "Chest" },
+                      { key: "waist", label: "Waist" },
+                      { key: "point", label: "Point" },
+                      { key: "bust_length", label: "Bust Length" },
+                      { key: "front_length", label: "Front Length" },
+                      { key: "cross_front", label: "Cross Front" },
+                      { key: "back_deep_balance", label: "Back Deep / Balance" },
+                      { key: "cross_back", label: "Cross Back" },
+                      { key: "sleeve_round", label: "Sleeve Round" },
+                    ].map(({ key, label }) => (
+                      <div key={key} className="space-y-1">
+                        <Label className="text-xs text-[#8A7D76]">{label}</Label>
+                        <Input
+                          value={item[key] || ""}
+                          onChange={(e) => handleItemChange(index, key, e.target.value)}
+                          className="bg-white border-[#EFEBE4] rounded-lg h-10"
+                          placeholder="e.g., 36"
+                          data-testid={`measurement-${key}-${index}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Neckline Measurements */}
+                <div>
+                  <Label className="text-[#5C504A] text-sm font-semibold mb-3 block">Neckline Measurements</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-[#8A7D76]">Front Neck</Label>
                       <Input
-                        value={item[key] || ""}
-                        onChange={(e) => handleItemChange(index, key, e.target.value)}
+                        value={item.front_neck || ""}
+                        onChange={(e) => handleItemChange(index, "front_neck", e.target.value)}
                         className="bg-white border-[#EFEBE4] rounded-lg h-10"
-                        placeholder="e.g., 36"
+                        placeholder="e.g., 7"
+                        data-testid={`measurement-front-neck-${index}`}
                       />
                     </div>
-                  ))}
+                    <div className="space-y-1">
+                      <Label className="text-xs text-[#8A7D76]">Back Neck</Label>
+                      <Input
+                        value={item.back_neck || ""}
+                        onChange={(e) => handleItemChange(index, "back_neck", e.target.value)}
+                        className="bg-white border-[#EFEBE4] rounded-lg h-10"
+                        placeholder="e.g., 6"
+                        data-testid={`measurement-back-neck-${index}`}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Additional Notes */}
                 <div className="space-y-2">
-                  <Label className="text-[#5C504A]">Additional Notes</Label>
+                  <Label className="text-[#5C504A]">Additional Details</Label>
                   <Textarea
                     value={item.additional_notes}
                     onChange={(e) => handleItemChange(index, "additional_notes", e.target.value)}
                     className="bg-white border-[#EFEBE4] rounded-xl"
                     rows={2}
-                    placeholder="Any special instructions..."
+                    placeholder="Any special instructions or additional details..."
+                    data-testid={`additional-notes-${index}`}
                   />
                 </div>
               </div>

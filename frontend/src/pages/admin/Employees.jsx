@@ -8,7 +8,7 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
-import { Plus, Phone, Mail, IndianRupee, Clock, Calendar, User, Edit, FileText } from "lucide-react";
+import { Plus, Phone, Mail, IndianRupee, Clock, Calendar, User, Edit, FileText, Upload, Trash2, Download, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 const PAYMENT_MODES = ["cash", "upi", "card", "bank_transfer"];
@@ -19,7 +19,9 @@ const Employees = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showHoursModal, setShowHoursModal] = useState(false);
+  const [showDocsModal, setShowDocsModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [uploading, setUploading] = useState(false);
   
   const [newEmployee, setNewEmployee] = useState({
     name: "", phone: "", email: "", role: "", address: "",
@@ -105,6 +107,62 @@ const Employees = () => {
     } catch (error) {
       toast.error("Failed to log hours");
     }
+  };
+
+  const handleUploadDocument = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedEmployee) return;
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast.error("File too large (max 10MB)");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("file", file);
+      await axios.post(`${API}/employees/${selectedEmployee.id}/documents`, formData, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
+      });
+      toast.success("Document uploaded");
+      fetchEmployees();
+      // Refresh selected employee
+      const resp = await axios.get(`${API}/employees/${selectedEmployee.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedEmployee(resp.data);
+    } catch (error) {
+      toast.error("Failed to upload document");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleDeleteDocument = async (docId) => {
+    if (!selectedEmployee) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API}/employees/${selectedEmployee.id}/documents/${docId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success("Document deleted");
+      fetchEmployees();
+      const resp = await axios.get(`${API}/employees/${selectedEmployee.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedEmployee(resp.data);
+    } catch (error) {
+      toast.error("Failed to delete document");
+    }
+  };
+
+  const handleViewDocument = (docId) => {
+    const token = localStorage.getItem("token");
+    window.open(`${API}/employees/${selectedEmployee.id}/documents/${docId}?token=${token}`, "_blank");
   };
 
   const formatCurrency = (amount) => {
@@ -218,7 +276,17 @@ const Employees = () => {
                       className="flex-1 border-[#EFEBE4] rounded-lg"
                     >
                       <Clock className="w-4 h-4 mr-1" />
-                      Log Hours
+                      Hours
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setSelectedEmployee(employee); setShowDocsModal(true); }}
+                      className="flex-1 border-[#EFEBE4] rounded-lg"
+                      data-testid={`docs-btn-${employee.id}`}
+                    >
+                      <FileText className="w-4 h-4 mr-1" />
+                      Docs {(employee.documents?.length > 0 && typeof employee.documents[0] === 'object') ? `(${employee.documents.length})` : ""}
                     </Button>
                   </div>
                 </CardContent>
@@ -420,6 +488,86 @@ const Employees = () => {
             </Button>
             <Button onClick={handleLogHours} className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white rounded-full">
               Log Hours
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Documents Modal */}
+      <Dialog open={showDocsModal} onOpenChange={setShowDocsModal}>
+        <DialogContent className="bg-[#FDFBF7] border-[#EFEBE4] max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-['Cormorant_Garamond'] text-xl text-[#2D2420]">
+              Documents - {selectedEmployee?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Upload */}
+            <div className="flex items-center gap-3">
+              <label
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-[#C05C3B]/30 rounded-xl cursor-pointer hover:bg-[#C05C3B]/5 transition-colors"
+                data-testid="doc-upload-label"
+              >
+                <Upload className="w-5 h-5 text-[#C05C3B]" />
+                <span className="text-sm text-[#5C504A]">
+                  {uploading ? "Uploading..." : "Click to upload document"}
+                </span>
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={handleUploadDocument}
+                  disabled={uploading}
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
+                  data-testid="doc-upload-input"
+                />
+              </label>
+            </div>
+
+            {/* Document List */}
+            {selectedEmployee?.documents?.filter(d => typeof d === 'object').length > 0 ? (
+              <div className="space-y-2">
+                {selectedEmployee.documents.filter(d => typeof d === 'object').map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between bg-[#F7F2EB] rounded-xl p-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <FileText className="w-5 h-5 text-[#C05C3B] flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-[#2D2420] truncate">{doc.original_filename}</p>
+                        <p className="text-xs text-[#8A7D76]">
+                          {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : ""}
+                          {doc.size ? ` · ${(doc.size / 1024).toFixed(1)} KB` : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewDocument(doc.id)}
+                        className="text-[#5C504A] hover:text-[#C05C3B]"
+                        data-testid={`view-doc-${doc.id}`}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteDocument(doc.id)}
+                        className="text-[#B85450] hover:text-[#B85450]/80"
+                        data-testid={`delete-doc-${doc.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-sm text-[#8A7D76] py-4">No documents uploaded yet</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDocsModal(false)} className="rounded-full">
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
