@@ -141,21 +141,6 @@ const OrderDetail = () => {
                   <p className="font-semibold text-[#C05C3B]">{formatCurrency(item.cost)}</p>
                 </div>
 
-                {/* Garment Options */}
-                {(item.padded === 'yes' || item.princess_cut === 'yes' || item.open_style) && (
-                  <div className="flex flex-wrap gap-2 pt-3 border-t border-[#EFEBE4]">
-                    {item.padded === 'yes' && (
-                      <span className="px-3 py-1 bg-[#C05C3B]/10 text-[#C05C3B] rounded-full text-xs font-medium">Padded</span>
-                    )}
-                    {item.princess_cut === 'yes' && (
-                      <span className="px-3 py-1 bg-[#7E8B76]/10 text-[#4A5D40] rounded-full text-xs font-medium">Princess Cut</span>
-                    )}
-                    {item.open_style && (
-                      <span className="px-3 py-1 bg-[#D19B5A]/10 text-[#8C3B24] rounded-full text-xs font-medium">Open: {item.open_style}</span>
-                    )}
-                  </div>
-                )}
-
                 {/* Neck Designs */}
                 {(item.front_neck_design || item.back_neck_design) && (
                   <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#EFEBE4]">
@@ -174,54 +159,59 @@ const OrderDetail = () => {
                   </div>
                 )}
 
-                {/* Measurements */}
-                <div className="pt-3 border-t border-[#EFEBE4]">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Ruler className="w-4 h-4 text-[#8A7D76]" />
-                    <p className="text-sm font-medium text-[#5C504A]">Measurements</p>
-                  </div>
-                  <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-                    {[
-                      { key: "length", label: "Length" },
-                      { key: "shoulder", label: "Shoulder" },
-                      { key: "sleeve_length", label: "Sleeve L." },
-                      { key: "arm_round", label: "Arm Round" },
-                      { key: "bicep", label: "Bicep" },
-                      { key: "upper_chest", label: "Upper Chest" },
-                      { key: "chest", label: "Chest" },
-                      { key: "waist", label: "Waist" },
-                      { key: "point", label: "Point" },
-                      { key: "bust_length", label: "Bust Length" },
-                      { key: "front_length", label: "Front Length" },
-                      { key: "cross_front", label: "Cross Front" },
-                      { key: "back_deep_balance", label: "Back Deep" },
-                      { key: "cross_back", label: "Cross Back" },
-                      { key: "sleeve_round", label: "Sleeve R." },
-                      { key: "front_neck", label: "Front Neck" },
-                      { key: "back_neck", label: "Back Neck" },
-                    ].filter(m => item[m.key]).map(({ key, label }) => (
-                      <div key={key} className="text-center p-2 bg-white rounded-lg">
-                        <p className="text-xs text-[#8A7D76]">{label}</p>
-                        <p className="font-medium text-[#2D2420]">{item[key]}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Additional Notes */}
                 {item.additional_notes && (
                   <div className="pt-3 border-t border-[#EFEBE4]">
-                    <div className="flex items-center gap-2 mb-2">
-                      <MessageSquare className="w-4 h-4 text-[#8A7D76]" />
-                      <p className="text-sm font-medium text-[#5C504A]">Notes</p>
-                    </div>
-                    <p className="text-sm text-[#5C504A] bg-white p-3 rounded-lg">{item.additional_notes}</p>
+                    <p className="text-xs text-[#8A7D76] mb-1">Notes</p>
+                    <p className="text-sm text-[#5C504A]">{item.additional_notes}</p>
                   </div>
                 )}
               </div>
             ))}
           </CardContent>
         </Card>
+
+        {/* Measurements (Order Level) */}
+        {order.measurements && Object.values(order.measurements).some(v => v && v !== "no") && (
+          <Card className="bg-white border-[#EFEBE4]">
+            <CardHeader>
+              <CardTitle className="font-['Cormorant_Garamond'] text-xl text-[#2D2420] flex items-center gap-2">
+                <Ruler className="w-5 h-5 text-[#C05C3B]" />
+                Measurements
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Garment Options */}
+              {(order.measurements.padded === 'yes' || order.measurements.princess_cut === 'yes' || order.measurements.open_style) && (
+                <div className="flex flex-wrap gap-2">
+                  {order.measurements.padded === 'yes' && <span className="px-3 py-1 bg-[#C05C3B]/10 text-[#C05C3B] rounded-full text-xs font-medium">Padded</span>}
+                  {order.measurements.princess_cut === 'yes' && <span className="px-3 py-1 bg-[#7E8B76]/10 text-[#4A5D40] rounded-full text-xs font-medium">Princess Cut</span>}
+                  {order.measurements.open_style && <span className="px-3 py-1 bg-[#D19B5A]/10 text-[#8C3B24] rounded-full text-xs font-medium">Open: {order.measurements.open_style}</span>}
+                </div>
+              )}
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                {[
+                  { key: "length", label: "Length" }, { key: "shoulder", label: "Shoulder" },
+                  { key: "sleeve_length", label: "Sleeve L." }, { key: "arm_round", label: "Arm Round" },
+                  { key: "bicep", label: "Bicep" }, { key: "upper_chest", label: "Upper Chest" },
+                  { key: "chest", label: "Chest" }, { key: "waist", label: "Waist" },
+                  { key: "point", label: "Point" }, { key: "bust_length", label: "Bust Length" },
+                  { key: "front_length", label: "Front L." }, { key: "cross_front", label: "Cross Front" },
+                  { key: "back_deep_balance", label: "Back Deep" }, { key: "cross_back", label: "Cross Back" },
+                  { key: "sleeve_round", label: "Sleeve R." }, { key: "front_neck", label: "Front Neck" },
+                  { key: "back_neck", label: "Back Neck" },
+                ].filter(m => order.measurements[m.key]).map(({ key, label }) => (
+                  <div key={key} className="text-center p-2 bg-[#F7F2EB] rounded-lg">
+                    <p className="text-xs text-[#8A7D76]">{label}</p>
+                    <p className="font-medium text-[#2D2420]">{order.measurements[key]}</p>
+                  </div>
+                ))}
+              </div>
+              {order.measurements.additional_notes && (
+                <p className="text-sm text-[#5C504A] bg-[#F7F2EB] p-3 rounded-lg italic">{order.measurements.additional_notes}</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Order Description */}
         {order.description && (

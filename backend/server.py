@@ -161,14 +161,16 @@ class CustomerCreate(BaseModel):
 
 class MeasurementItem(BaseModel):
     service_type: str
-    blouse_type: Optional[str] = None  # with_cups / without_cups
+    blouse_type: Optional[str] = None
     front_neck_design: Optional[str] = None
     back_neck_design: Optional[str] = None
-    # Garment options
-    padded: Optional[str] = None  # yes / no
-    princess_cut: Optional[str] = None  # yes / no
-    open_style: Optional[str] = None  # front / back
-    # Main measurements
+    additional_notes: Optional[str] = None
+    cost: float = 0
+
+class OrderMeasurements(BaseModel):
+    padded: Optional[str] = None
+    princess_cut: Optional[str] = None
+    open_style: Optional[str] = None
     length: Optional[str] = None
     shoulder: Optional[str] = None
     sleeve_length: Optional[str] = None
@@ -184,16 +186,9 @@ class MeasurementItem(BaseModel):
     back_deep_balance: Optional[str] = None
     cross_back: Optional[str] = None
     sleeve_round: Optional[str] = None
-    # Neckline measurements
     front_neck: Optional[str] = None
     back_neck: Optional[str] = None
-    # Legacy fields kept for backward compat
-    hip: Optional[str] = None
-    armhole: Optional[str] = None
-    neck_depth_front: Optional[str] = None
-    neck_depth_back: Optional[str] = None
     additional_notes: Optional[str] = None
-    cost: float = 0
 
 class PaymentRecord(BaseModel):
     amount: float
@@ -211,6 +206,7 @@ class OrderCreate(BaseModel):
     customer_dob: str
     delivery_date: str
     items: List[MeasurementItem]
+    measurements: Optional[dict] = None
     tax_percentage: float = 18
     advance_amount: float = 0
     advance_date: Optional[str] = None
@@ -221,6 +217,7 @@ class OrderUpdate(BaseModel):
     status: Optional[str] = None
     delivery_date: Optional[str] = None
     items: Optional[List[MeasurementItem]] = None
+    measurements: Optional[dict] = None
     tax_percentage: Optional[float] = None
     description: Optional[str] = None
 
@@ -386,6 +383,7 @@ async def create_order(data: OrderCreate, request: Request):
         "order_date": datetime.now(timezone.utc).isoformat(),
         "delivery_date": data.delivery_date,
         "items": [item.model_dump() for item in data.items],
+        "measurements": data.measurements or {},
         "subtotal": subtotal,
         "tax_percentage": data.tax_percentage,
         "tax_amount": tax,
@@ -768,6 +766,102 @@ async def delete_gallery_item(item_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Item not found")
     
     return {"message": "Item deleted"}
+
+@api_router.post("/gallery/upload")
+async def upload_gallery_image(file: UploadFile = File(...), title: str = "Untitled", category: str = "", request: Request = None):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    ext = file.filename.split(".")[-1].lower() if "." in file.filename else "jpg"
+    content_type = MIME_TYPES.get(ext, file.content_type or "image/jpeg")
+    data = await file.read()
+    file_id = str(uuid.uuid4())
+    path = f"{APP_NAME}/gallery/{file_id}.{ext}"
+    
+    try:
+        result = put_object(path, data, content_type)
+        image_url = result.get("url", f"/api/gallery/image/{file_id}")
+        
+        gallery_doc = {
+            "title": title,
+            "image_url": image_url,
+            "storage_path": result["path"],
+            "category": category,
+            "file_id": file_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        insert_result = await db.gallery.insert_one(gallery_doc)
+        return {"id": str(insert_result.inserted_id), "image_url": image_url, "message": "Image uploaded"}
+    except Exception as e:
+        logger.error(f"Gallery upload failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload image")
+
+@api_router.get("/gallery/image/{file_id}")
+async def get_gallery_image(file_id: str):
+    item = await db.gallery.find_one({"file_id": file_id})
+    if not item or "storage_path" not in item:
+        raise HTTPException(status_code=404, detail="Image not found")
+    try:
+        data, content_type = get_object(item["storage_path"])
+        return Response(content=data, media_type=content_type)
+    except Exception as e:
+        logger.error(f"Gallery image fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load image")
+
+# ============== WHATSAPP MESSAGE HELPER ==============
+@api_router.get("/orders/{order_id}/whatsapp-message")
+async def get_whatsapp_message(order_id: str, message_type: str = "status_update", request: Request = None):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    order = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    phone = order.get("customer_phone", "")
+    name = order.get("customer_name", "Customer")
+    status = order.get("status", "pending")
+    total = order.get("total", 0)
+    balance = order.get("balance", 0)
+    delivery = order.get("delivery_date", "")
+    
+    status_labels = {"pending": "Pending", "in_progress": "In Progress", "ready": "Ready for Pickup", "delivered": "Delivered"}
+    
+    if message_type == "order_created":
+        msg = (f"Hello {name},\n\n"
+               f"Your order #{order_id} has been created at Kshana Contour!\n\n"
+               f"Total: Rs.{total:.0f}\n"
+               f"Delivery Date: {delivery}\n\n"
+               f"Thank you for choosing Kshana Contour!")
+    elif message_type == "status_update":
+        msg = (f"Hello {name},\n\n"
+               f"Your order #{order_id} status has been updated to: *{status_labels.get(status, status)}*\n")
+        if status == "ready":
+            msg += f"\nYour order is ready for pickup! Please visit us at your convenience."
+        elif status == "delivered":
+            msg += f"\nThank you for choosing Kshana Contour! We hope you love it."
+        if balance > 0:
+            msg += f"\n\nBalance Due: Rs.{balance:.0f}"
+        msg += f"\n\n- Kshana Contour"
+    elif message_type == "payment_reminder":
+        msg = (f"Hello {name},\n\n"
+               f"Gentle reminder for order #{order_id}.\n"
+               f"Balance Due: Rs.{balance:.0f}\n\n"
+               f"- Kshana Contour")
+    else:
+        msg = f"Hello {name}, regarding your order #{order_id} at Kshana Contour."
+    
+    # Format phone for wa.me (add 91 if needed)
+    wa_phone = phone.strip().replace(" ", "")
+    if not wa_phone.startswith("91"):
+        wa_phone = "91" + wa_phone
+    
+    import urllib.parse
+    wa_url = f"https://wa.me/{wa_phone}?text={urllib.parse.quote(msg)}"
+    
+    return {"message": msg, "whatsapp_url": wa_url, "phone": wa_phone}
 
 # ============== REPORTS/DASHBOARD ENDPOINTS ==============
 @api_router.get("/dashboard/stats")

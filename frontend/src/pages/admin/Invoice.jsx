@@ -163,30 +163,6 @@ const Invoice = () => {
             </tbody>
           </table>
 
-          {/* Measurements per item */}
-          {order.items?.map((item, i) => {
-            const hasMeasurements = measurementFields.some(m => item[m.key]);
-            if (!hasMeasurements) return null;
-            return (
-              <div key={i} className="mb-4 border border-[#EFEBE4] rounded-lg p-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#8A7D76] mb-3">
-                  Measurements — Item {i + 1}: {item.service_type}
-                </h4>
-                <div className="grid grid-cols-5 gap-x-4 gap-y-2 text-xs">
-                  {measurementFields.filter(m => item[m.key]).map(({ key, label }) => (
-                    <div key={key} className="flex justify-between border-b border-dotted border-[#EFEBE4] pb-1">
-                      <span className="text-[#8A7D76]">{label}</span>
-                      <span className="font-medium text-[#2D2420] ml-2">{item[key]}</span>
-                    </div>
-                  ))}
-                </div>
-                {item.additional_notes && (
-                  <p className="text-xs text-[#5C504A] mt-2 italic">Note: {item.additional_notes}</p>
-                )}
-              </div>
-            );
-          })}
-
           {/* Billing */}
           <div className="flex justify-end mb-6">
             <div className="w-64">

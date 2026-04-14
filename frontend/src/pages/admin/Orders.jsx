@@ -9,7 +9,7 @@ import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { 
   Plus, Search, Eye, Edit, Phone, Calendar, 
-  IndianRupee, Clock, CheckCircle, Truck, AlertTriangle, Printer
+  IndianRupee, Clock, CheckCircle, Truck, AlertTriangle, Printer, MessageCircle
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -86,8 +86,34 @@ const Orders = () => {
       );
       toast.success(`Order status updated to ${statusLabels[newStatus]}`);
       fetchOrders();
+      
+      // Open WhatsApp with status message
+      try {
+        const waResp = await axios.get(`${API}/orders/${orderId}/whatsapp-message?message_type=status_update`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (waResp.data?.whatsapp_url) {
+          window.open(waResp.data.whatsapp_url, "_blank");
+        }
+      } catch (e) {
+        // WhatsApp is optional, don't block
+      }
     } catch (error) {
       toast.error("Failed to update status");
+    }
+  };
+
+  const sendWhatsApp = async (orderId, messageType = "status_update") => {
+    try {
+      const token = localStorage.getItem("token");
+      const resp = await axios.get(`${API}/orders/${orderId}/whatsapp-message?message_type=${messageType}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (resp.data?.whatsapp_url) {
+        window.open(resp.data.whatsapp_url, "_blank");
+      }
+    } catch (error) {
+      toast.error("Failed to generate WhatsApp message");
     }
   };
 
@@ -246,6 +272,16 @@ const Orders = () => {
                         >
                           <Printer className="w-4 h-4 mr-1" />
                           Invoice
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => sendWhatsApp(order.order_id)}
+                          className="border-[#EFEBE4] hover:border-[#25D366] hover:text-[#25D366] rounded-lg"
+                          data-testid={`whatsapp-order-${order.order_id}`}
+                        >
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                          WhatsApp
                         </Button>
                         {order.status !== "delivered" && (
                           <Select 

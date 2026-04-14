@@ -41,11 +41,14 @@ const defaultItem = {
   blouse_type: "without_cups",
   front_neck_design: "",
   back_neck_design: "",
-  // Garment options
+  additional_notes: "",
+  cost: 0
+};
+
+const defaultMeasurements = {
   padded: "no",
   princess_cut: "no",
   open_style: "back",
-  // Main measurements
   length: "",
   shoulder: "",
   sleeve_length: "",
@@ -61,11 +64,9 @@ const defaultItem = {
   back_deep_balance: "",
   cross_back: "",
   sleeve_round: "",
-  // Neckline measurements
   front_neck: "",
   back_neck: "",
-  additional_notes: "",
-  cost: 0
+  additional_notes: ""
 };
 
 const OrderForm = () => {
@@ -94,6 +95,7 @@ const OrderForm = () => {
   });
   
   const [items, setItems] = useState([{ ...defaultItem }]);
+  const [measurements, setMeasurements] = useState({ ...defaultMeasurements });
   const [existingOrder, setExistingOrder] = useState(null);
   const [newPayment, setNewPayment] = useState({ amount: 0, date: "", mode: "cash", notes: "" });
 
@@ -127,6 +129,7 @@ const OrderForm = () => {
         advance_mode: "cash"
       });
       setItems(order.items?.length > 0 ? order.items : [{ ...defaultItem }]);
+      setMeasurements(order.measurements || defaultMeasurements);
     } catch (error) {
       toast.error("Failed to load order");
       navigate("/admin/orders");
@@ -143,6 +146,10 @@ const OrderForm = () => {
     const newItems = [...items];
     newItems[index][field] = value;
     setItems(newItems);
+  };
+
+  const handleMeasurementChange = (field, value) => {
+    setMeasurements(prev => ({ ...prev, [field]: value }));
   };
 
   const addItem = () => {
@@ -188,6 +195,7 @@ const OrderForm = () => {
         await axios.put(`${API}/orders/${orderId}`, {
           delivery_date: formData.delivery_date,
           items: items,
+          measurements: measurements,
           tax_percentage: formData.tax_percentage,
           description: formData.description
         }, { headers });
@@ -202,6 +210,7 @@ const OrderForm = () => {
           customer_dob: formData.customer_dob,
           delivery_date: formData.delivery_date,
           items: items,
+          measurements: measurements,
           tax_percentage: formData.tax_percentage,
           advance_amount: parseFloat(formData.advance_amount) || 0,
           advance_date: formData.advance_date,
@@ -509,61 +518,6 @@ const OrderForm = () => {
                   </div>
                 )}
 
-                {/* Garment Options */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[#5C504A]">Padded</Label>
-                    <RadioGroup
-                      value={item.padded || "no"}
-                      onValueChange={(value) => handleItemChange(index, "padded", value)}
-                      className="flex gap-6"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id={`padded-yes-${index}`} />
-                        <Label htmlFor={`padded-yes-${index}`} className="font-normal">Yes</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id={`padded-no-${index}`} />
-                        <Label htmlFor={`padded-no-${index}`} className="font-normal">No</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[#5C504A]">Princess Cut</Label>
-                    <RadioGroup
-                      value={item.princess_cut || "no"}
-                      onValueChange={(value) => handleItemChange(index, "princess_cut", value)}
-                      className="flex gap-6"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="yes" id={`princess-yes-${index}`} />
-                        <Label htmlFor={`princess-yes-${index}`} className="font-normal">Yes</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id={`princess-no-${index}`} />
-                        <Label htmlFor={`princess-no-${index}`} className="font-normal">No</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[#5C504A]">Open</Label>
-                    <RadioGroup
-                      value={item.open_style || "back"}
-                      onValueChange={(value) => handleItemChange(index, "open_style", value)}
-                      className="flex gap-6"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="front" id={`open-front-${index}`} />
-                        <Label htmlFor={`open-front-${index}`} className="font-normal">Front</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="back" id={`open-back-${index}`} />
-                        <Label htmlFor={`open-back-${index}`} className="font-normal">Back</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                </div>
-
                 {/* Neck Designs */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -588,82 +542,119 @@ const OrderForm = () => {
                   </div>
                 </div>
 
-                {/* Measurements Grid */}
-                <div>
-                  <Label className="text-[#5C504A] text-sm font-semibold mb-3 block">Body Measurements</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {[
-                      { key: "length", label: "Length" },
-                      { key: "shoulder", label: "Shoulder" },
-                      { key: "sleeve_length", label: "Sleeve Length" },
-                      { key: "arm_round", label: "Arm Round" },
-                      { key: "bicep", label: "Bicep" },
-                      { key: "upper_chest", label: "Upper Chest" },
-                      { key: "chest", label: "Chest" },
-                      { key: "waist", label: "Waist" },
-                      { key: "point", label: "Point" },
-                      { key: "bust_length", label: "Bust Length" },
-                      { key: "front_length", label: "Front Length" },
-                      { key: "cross_front", label: "Cross Front" },
-                      { key: "back_deep_balance", label: "Back Deep / Balance" },
-                      { key: "cross_back", label: "Cross Back" },
-                      { key: "sleeve_round", label: "Sleeve Round" },
-                    ].map(({ key, label }) => (
-                      <div key={key} className="space-y-1">
-                        <Label className="text-xs text-[#8A7D76]">{label}</Label>
-                        <Input
-                          value={item[key] || ""}
-                          onChange={(e) => handleItemChange(index, key, e.target.value)}
-                          className="bg-white border-[#EFEBE4] rounded-lg h-10"
-                          placeholder="e.g., 36"
-                          data-testid={`measurement-${key}-${index}`}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Neckline Measurements */}
-                <div>
-                  <Label className="text-[#5C504A] text-sm font-semibold mb-3 block">Neckline Measurements</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-[#8A7D76]">Front Neck</Label>
-                      <Input
-                        value={item.front_neck || ""}
-                        onChange={(e) => handleItemChange(index, "front_neck", e.target.value)}
-                        className="bg-white border-[#EFEBE4] rounded-lg h-10"
-                        placeholder="e.g., 7"
-                        data-testid={`measurement-front-neck-${index}`}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-[#8A7D76]">Back Neck</Label>
-                      <Input
-                        value={item.back_neck || ""}
-                        onChange={(e) => handleItemChange(index, "back_neck", e.target.value)}
-                        className="bg-white border-[#EFEBE4] rounded-lg h-10"
-                        placeholder="e.g., 6"
-                        data-testid={`measurement-back-neck-${index}`}
-                      />
-                    </div>
-                  </div>
-                </div>
-
                 {/* Additional Notes */}
                 <div className="space-y-2">
-                  <Label className="text-[#5C504A]">Additional Details</Label>
+                  <Label className="text-[#5C504A]">Item Notes</Label>
                   <Textarea
                     value={item.additional_notes}
                     onChange={(e) => handleItemChange(index, "additional_notes", e.target.value)}
                     className="bg-white border-[#EFEBE4] rounded-xl"
                     rows={2}
-                    placeholder="Any special instructions or additional details..."
+                    placeholder="Any special instructions for this item..."
                     data-testid={`additional-notes-${index}`}
                   />
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        {/* Measurements (Single Section for Order) */}
+        <Card className="bg-white border-[#EFEBE4]">
+          <CardHeader>
+            <CardTitle className="font-['Cormorant_Garamond'] text-xl text-[#2D2420]">
+              Measurements
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Garment Options */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[#5C504A]">Padded</Label>
+                <RadioGroup value={measurements.padded || "no"} onValueChange={(v) => handleMeasurementChange("padded", v)} className="flex gap-6">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="m-padded-yes" /><Label htmlFor="m-padded-yes" className="font-normal">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="m-padded-no" /><Label htmlFor="m-padded-no" className="font-normal">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[#5C504A]">Princess Cut</Label>
+                <RadioGroup value={measurements.princess_cut || "no"} onValueChange={(v) => handleMeasurementChange("princess_cut", v)} className="flex gap-6">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="m-princess-yes" /><Label htmlFor="m-princess-yes" className="font-normal">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="m-princess-no" /><Label htmlFor="m-princess-no" className="font-normal">No</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[#5C504A]">Open</Label>
+                <RadioGroup value={measurements.open_style || "back"} onValueChange={(v) => handleMeasurementChange("open_style", v)} className="flex gap-6">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="front" id="m-open-front" /><Label htmlFor="m-open-front" className="font-normal">Front</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="back" id="m-open-back" /><Label htmlFor="m-open-back" className="font-normal">Back</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </div>
+
+            {/* Body Measurements */}
+            <div>
+              <Label className="text-[#5C504A] text-sm font-semibold mb-3 block">Body Measurements</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {[
+                  { key: "length", label: "Length" }, { key: "shoulder", label: "Shoulder" },
+                  { key: "sleeve_length", label: "Sleeve Length" }, { key: "arm_round", label: "Arm Round" },
+                  { key: "bicep", label: "Bicep" }, { key: "upper_chest", label: "Upper Chest" },
+                  { key: "chest", label: "Chest" }, { key: "waist", label: "Waist" },
+                  { key: "point", label: "Point" }, { key: "bust_length", label: "Bust Length" },
+                  { key: "front_length", label: "Front Length" }, { key: "cross_front", label: "Cross Front" },
+                  { key: "back_deep_balance", label: "Back Deep / Balance" }, { key: "cross_back", label: "Cross Back" },
+                  { key: "sleeve_round", label: "Sleeve Round" },
+                ].map(({ key, label }) => (
+                  <div key={key} className="space-y-1">
+                    <Label className="text-xs text-[#8A7D76]">{label}</Label>
+                    <Input
+                      value={measurements[key] || ""}
+                      onChange={(e) => handleMeasurementChange(key, e.target.value)}
+                      className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-lg h-10"
+                      placeholder="e.g., 36"
+                      data-testid={`measurement-${key}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Neckline */}
+            <div>
+              <Label className="text-[#5C504A] text-sm font-semibold mb-3 block">Neckline Measurements</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs text-[#8A7D76]">Front Neck</Label>
+                  <Input value={measurements.front_neck || ""} onChange={(e) => handleMeasurementChange("front_neck", e.target.value)}
+                    className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-lg h-10" placeholder="e.g., 7" data-testid="measurement-front-neck" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-[#8A7D76]">Back Neck</Label>
+                  <Input value={measurements.back_neck || ""} onChange={(e) => handleMeasurementChange("back_neck", e.target.value)}
+                    className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-lg h-10" placeholder="e.g., 6" data-testid="measurement-back-neck" />
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Notes */}
+            <div className="space-y-2">
+              <Label className="text-[#5C504A]">Additional Details</Label>
+              <Textarea value={measurements.additional_notes || ""} onChange={(e) => handleMeasurementChange("additional_notes", e.target.value)}
+                className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-xl" rows={2} placeholder="Any special measurement notes..." />
+            </div>
           </CardContent>
         </Card>
 
