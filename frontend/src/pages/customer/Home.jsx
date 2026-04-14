@@ -17,10 +17,10 @@ const CustomerHome = () => {
   const [gallery, setGallery] = useState([]);
 
   const defaultGallery = [
-    { id: 1, url: "https://images.unsplash.com/photo-1549261472-fcd48d0b6709?w=400", title: "Traditional Saree" },
-    { id: 2, url: "https://images.unsplash.com/photo-1769103948746-8592931bbdad?w=400", title: "Designer Blouse" },
-    { id: 3, url: "https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400", title: "Bridal Collection" },
-    { id: 4, url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=400", title: "Contemporary Design" },
+    { id: 1, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/7lsyatwt_image.png", title: "Red Bridal Blouse" },
+    { id: 2, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/wo33jc1d_WhatsApp%20Image%202026-04-14%20at%2012.30.24%20PM.jpeg", title: "Traditional Zari Work" },
+    { id: 3, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/3u4ltgp8_WhatsApp%20Image%202026-04-14%20at%2012.30.20%20PM%20%281%29.jpeg", title: "Floral Embroidery" },
+    { id: 4, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/6oa9xqr3_WhatsApp%20Image%202026-04-14%20at%2012.30.19%20PM.jpeg", title: "Purple Velvet Designer" },
   ];
 
   useEffect(() => {
@@ -155,7 +155,7 @@ const CustomerHome = () => {
                 className="aspect-square overflow-hidden rounded-2xl"
               >
                 <img 
-                  src={item.image_url || item.url}
+                  src={item.image_url}
                   alt={item.title}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />
