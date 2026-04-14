@@ -950,6 +950,129 @@ async def get_chart_data(request: Request):
     sorted_data = sorted(monthly_data.items(), key=lambda x: x[0])
     return [v for k, v in sorted_data]
 
+@api_router.get("/reports/financial-summary")
+async def get_financial_summary(request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    now = datetime.now(timezone.utc)
+    all_orders = await db.orders.find({}, {"_id": 0}).to_list(10000)
+    all_employees = await db.employees.find({}).to_list(1000)
+    all_materials = await db.materials.find({}, {"_id": 0}).to_list(10000)
+    
+    # === ORDER INCOME ===
+    total_order_value = sum(o.get("total", 0) for o in all_orders)
+    total_received = 0
+    all_income_payments = []
+    for o in all_orders:
+        for p in o.get("payments", []):
+            total_received += p.get("amount", 0)
+            all_income_payments.append({
+                "order_id": o.get("order_id"),
+                "customer_name": o.get("customer_name"),
+                "customer_phone": o.get("customer_phone"),
+                "amount": p.get("amount", 0),
+                "date": p.get("date", ""),
+                "mode": p.get("mode", ""),
+                "notes": p.get("notes", "")
+            })
+    total_balance = sum(o.get("balance", 0) for o in all_orders)
+    
+    # Sort income by date desc
+    all_income_payments.sort(key=lambda x: x.get("date", ""), reverse=True)
+    
+    # === PENDING PAYMENTS (overdue) ===
+    pending_overdue = []
+    pending_upcoming = []
+    for o in all_orders:
+        if o.get("balance", 0) > 0:
+            delivery = o.get("delivery_date", "")
+            is_overdue = False
+            if delivery:
+                try:
+                    dd = datetime.fromisoformat(delivery.replace("Z", "+00:00")) if "T" in delivery else datetime.strptime(delivery, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                    is_overdue = dd < now
+                except:
+                    pass
+            entry = {
+                "order_id": o.get("order_id"),
+                "customer_name": o.get("customer_name"),
+                "customer_phone": o.get("customer_phone"),
+                "total": o.get("total", 0),
+                "balance": o.get("balance", 0),
+                "delivery_date": delivery,
+                "status": o.get("status", ""),
+                "is_overdue": is_overdue
+            }
+            if is_overdue:
+                pending_overdue.append(entry)
+            else:
+                pending_upcoming.append(entry)
+    
+    # === EMPLOYEE PAYMENTS ===
+    total_employee_payments = 0
+    all_employee_payments = []
+    for e in all_employees:
+        eid = str(e.get("_id", ""))
+        for p in e.get("payments", []):
+            total_employee_payments += p.get("amount", 0)
+            all_employee_payments.append({
+                "employee_name": e.get("name"),
+                "employee_role": e.get("role"),
+                "amount": p.get("amount", 0),
+                "date": p.get("date", ""),
+                "mode": p.get("mode", ""),
+                "notes": p.get("notes", "")
+            })
+    all_employee_payments.sort(key=lambda x: x.get("date", ""), reverse=True)
+    
+    # === MATERIAL PAYMENTS ===
+    total_material_cost = sum(m.get("cost", 0) for m in all_materials)
+    all_material_payments = []
+    for m in all_materials:
+        all_material_payments.append({
+            "material_name": m.get("name"),
+            "supplier": m.get("supplier", ""),
+            "amount": m.get("cost", 0),
+            "date": m.get("purchase_date", ""),
+            "mode": m.get("payment_mode", ""),
+            "quantity": m.get("quantity", 0),
+            "unit": m.get("unit", "")
+        })
+    all_material_payments.sort(key=lambda x: x.get("date", ""), reverse=True)
+    
+    return {
+        "orders": {
+            "total_value": total_order_value,
+            "total_received": total_received,
+            "total_balance": total_balance,
+            "order_count": len(all_orders),
+            "payments": all_income_payments
+        },
+        "pending": {
+            "overdue": pending_overdue,
+            "overdue_total": sum(p["balance"] for p in pending_overdue),
+            "upcoming": pending_upcoming,
+            "upcoming_total": sum(p["balance"] for p in pending_upcoming)
+        },
+        "employees": {
+            "total_paid": total_employee_payments,
+            "payment_count": len(all_employee_payments),
+            "payments": all_employee_payments
+        },
+        "materials": {
+            "total_cost": total_material_cost,
+            "item_count": len(all_material_payments),
+            "payments": all_material_payments
+        },
+        "net_summary": {
+            "total_income": total_received,
+            "total_outgoing": total_employee_payments + total_material_cost,
+            "net_profit": total_received - total_employee_payments - total_material_cost
+        }
+    }
+
 # ============== ROOT ENDPOINT ==============
 @api_router.get("/")
 async def root():
