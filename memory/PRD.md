@@ -27,6 +27,8 @@ Build a website for Kshana Contour Boutique with:
 - [x] Materials/Raw materials tracking
 - [x] Reports page with monthly/weekly stats
 - [x] Customer portal with order list, order details, measurements view
+- [x] Order deletion with reason (archived for records)
+- [x] Reference image uploads on orders (general + front/back neck per item)
 - [x] WhatsApp floating button, Google Reviews link, Contact info
 
 ## Prioritized Backlog
