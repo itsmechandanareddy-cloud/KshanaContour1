@@ -6,10 +6,13 @@ import AdminLayout from "../../components/AdminLayout";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
 import { 
   Plus, Search, Eye, Edit, Phone, Calendar, 
-  IndianRupee, Clock, CheckCircle, Truck, AlertTriangle, Printer, MessageCircle
+  IndianRupee, Clock, CheckCircle, Truck, AlertTriangle, Printer, MessageCircle, Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,6 +37,9 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteOrderId, setDeleteOrderId] = useState(null);
+  const [deleteReason, setDeleteReason] = useState("");
 
   useEffect(() => {
     fetchOrders();
@@ -114,6 +120,24 @@ const Orders = () => {
       }
     } catch (error) {
       toast.error("Failed to generate WhatsApp message");
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!deleteReason.trim()) { toast.error("Please enter a reason"); return; }
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API}/orders/${deleteOrderId}`, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        data: { reason: deleteReason }
+      });
+      toast.success("Order deleted");
+      setShowDeleteModal(false);
+      setDeleteOrderId(null);
+      setDeleteReason("");
+      fetchOrders();
+    } catch (error) {
+      toast.error("Failed to delete order");
     }
   };
 
@@ -283,6 +307,15 @@ const Orders = () => {
                           <MessageCircle className="w-4 h-4 mr-1" />
                           WhatsApp
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => { setDeleteOrderId(order.order_id); setShowDeleteModal(true); }}
+                          className="border-[#EFEBE4] hover:border-[#B85450] hover:text-[#B85450] rounded-lg"
+                          data-testid={`delete-order-${order.order_id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                         {order.status !== "delivered" && (
                           <Select 
                             value={order.status} 
@@ -308,6 +341,37 @@ const Orders = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Order Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="bg-[#FDFBF7] border-[#EFEBE4]">
+          <DialogHeader>
+            <DialogTitle className="font-['Cormorant_Garamond'] text-xl text-[#B85450]">
+              Delete Order #{deleteOrderId}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-[#5C504A]">This will permanently remove this order. Please provide a reason.</p>
+            <div className="space-y-2">
+              <Label className="text-[#5C504A]">Reason for Deletion *</Label>
+              <Textarea
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                className="bg-[#F7F2EB] border-transparent focus:border-[#B85450] rounded-xl"
+                rows={3}
+                placeholder="e.g., Customer cancelled, Duplicate order..."
+                data-testid="delete-reason-input"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowDeleteModal(false); setDeleteReason(""); }} className="rounded-full">Cancel</Button>
+            <Button onClick={handleDeleteOrder} className="bg-[#B85450] hover:bg-[#9A4440] text-white rounded-full" data-testid="confirm-delete-btn">
+              Delete Order
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

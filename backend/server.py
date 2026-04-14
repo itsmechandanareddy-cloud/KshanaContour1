@@ -530,6 +530,101 @@ async def update_order_status(order_id: str, status: str, request: Request):
     
     return {"message": f"Status updated to {status}"}
 
+class OrderDeleteRequest(BaseModel):
+    reason: str
+
+@api_router.delete("/orders/{order_id}")
+async def delete_order(order_id: str, data: OrderDeleteRequest, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    order = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Archive the order with deletion reason before removing
+    order["deleted_at"] = datetime.now(timezone.utc).isoformat()
+    order["deleted_by"] = user.get("_id")
+    order["deletion_reason"] = data.reason
+    await db.deleted_orders.insert_one(order)
+    
+    await db.orders.delete_one({"order_id": order_id})
+    logger.info(f"Order {order_id} deleted. Reason: {data.reason}")
+    return {"message": "Order deleted successfully"}
+
+@api_router.post("/orders/{order_id}/images")
+async def upload_order_image(order_id: str, file: UploadFile = File(...), image_type: str = "reference", request: Request = None):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    order = await db.orders.find_one({"order_id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    ext = file.filename.split(".")[-1].lower() if "." in file.filename else "jpg"
+    content_type = MIME_TYPES.get(ext, file.content_type or "image/jpeg")
+    data = await file.read()
+    file_id = str(uuid.uuid4())
+    path = f"{APP_NAME}/orders/{order_id}/{file_id}.{ext}"
+    
+    try:
+        result = put_object(path, data, content_type)
+        img_record = {
+            "id": file_id,
+            "storage_path": result["path"],
+            "original_filename": file.filename,
+            "content_type": content_type,
+            "image_type": image_type,
+            "uploaded_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.orders.update_one({"order_id": order_id}, {"$push": {"images": img_record}})
+        return {"id": file_id, "filename": file.filename, "image_type": image_type, "message": "Image uploaded"}
+    except Exception as e:
+        logger.error(f"Order image upload failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload image")
+
+@api_router.get("/orders/{order_id}/images/{image_id}")
+async def get_order_image(order_id: str, image_id: str, token: Optional[str] = None, request: Request = None):
+    if token:
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        except:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    else:
+        await get_current_user(request)
+    
+    order = await db.orders.find_one({"order_id": order_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    images = order.get("images", [])
+    img = next((i for i in images if i.get("id") == image_id), None)
+    if not img:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    try:
+        data, ct = get_object(img["storage_path"])
+        return Response(content=data, media_type=img.get("content_type", ct))
+    except Exception as e:
+        logger.error(f"Order image fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load image")
+
+@api_router.delete("/orders/{order_id}/images/{image_id}")
+async def delete_order_image(order_id: str, image_id: str, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    result = await db.orders.update_one(
+        {"order_id": order_id},
+        {"$pull": {"images": {"id": image_id}}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return {"message": "Image deleted"}
+
 # ============== EMPLOYEE ENDPOINTS ==============
 @api_router.post("/employees")
 async def create_employee(data: EmployeeCreate, request: Request):

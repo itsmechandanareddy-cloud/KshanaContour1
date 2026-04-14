@@ -11,7 +11,7 @@ import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
-import { ArrowLeft, Plus, Trash2, IndianRupee, Save, Printer } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, IndianRupee, Save, Printer, Upload, X, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 const SERVICE_TYPES = [
@@ -98,6 +98,8 @@ const OrderForm = () => {
   const [measurements, setMeasurements] = useState({ ...defaultMeasurements });
   const [existingOrder, setExistingOrder] = useState(null);
   const [newPayment, setNewPayment] = useState({ amount: 0, date: "", mode: "cash", notes: "" });
+  const [orderImages, setOrderImages] = useState([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (isEdit) {
@@ -130,6 +132,7 @@ const OrderForm = () => {
       });
       setItems(order.items?.length > 0 ? order.items : [{ ...defaultItem }]);
       setMeasurements(order.measurements || defaultMeasurements);
+      setOrderImages(order.images || []);
     } catch (error) {
       toast.error("Failed to load order");
       navigate("/admin/orders");
@@ -150,6 +153,46 @@ const OrderForm = () => {
 
   const handleMeasurementChange = (field, value) => {
     setMeasurements(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = async (e, imageType = "reference") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!isEdit) { toast.error("Please save the order first, then add images"); return; }
+    setUploadingImage(true);
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("file", file);
+      await axios.post(`${API}/orders/${orderId}/images?image_type=${imageType}`, formData, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
+      });
+      toast.success("Image uploaded");
+      fetchOrder();
+    } catch (error) {
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingImage(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleDeleteImage = async (imageId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API}/orders/${orderId}/images/${imageId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success("Image removed");
+      fetchOrder();
+    } catch (error) {
+      toast.error("Failed to delete image");
+    }
+  };
+
+  const getImageUrl = (img) => {
+    const token = localStorage.getItem("token");
+    return `${API}/orders/${orderId}/images/${img.id}?token=${token}`;
   };
 
   const addItem = () => {
@@ -518,7 +561,7 @@ const OrderForm = () => {
                   </div>
                 )}
 
-                {/* Neck Designs */}
+                {/* Neck Designs with Reference Images */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-[#5C504A]">Front Neck Design</Label>
@@ -529,6 +572,13 @@ const OrderForm = () => {
                       rows={2}
                       placeholder="Describe front neck design..."
                     />
+                    {isEdit && (
+                      <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-[#C05C3B]/30 rounded-lg cursor-pointer hover:bg-[#C05C3B]/5 transition-colors text-xs">
+                        <Upload className="w-3.5 h-3.5 text-[#C05C3B]" />
+                        <span className="text-[#5C504A]">{uploadingImage ? "Uploading..." : "Add front neck reference"}</span>
+                        <input type="file" className="hidden" onChange={(e) => handleImageUpload(e, `front_neck_${index}`)} accept=".jpg,.jpeg,.png,.webp" disabled={uploadingImage} />
+                      </label>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[#5C504A]">Back Neck Design</Label>
@@ -539,6 +589,13 @@ const OrderForm = () => {
                       rows={2}
                       placeholder="Describe back neck design..."
                     />
+                    {isEdit && (
+                      <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-[#C05C3B]/30 rounded-lg cursor-pointer hover:bg-[#C05C3B]/5 transition-colors text-xs">
+                        <Upload className="w-3.5 h-3.5 text-[#C05C3B]" />
+                        <span className="text-[#5C504A]">{uploadingImage ? "Uploading..." : "Add back neck reference"}</span>
+                        <input type="file" className="hidden" onChange={(e) => handleImageUpload(e, `back_neck_${index}`)} accept=".jpg,.jpeg,.png,.webp" disabled={uploadingImage} />
+                      </label>
+                    )}
                   </div>
                 </div>
 
@@ -558,6 +615,45 @@ const OrderForm = () => {
             ))}
           </CardContent>
         </Card>
+
+        {/* Reference Images */}
+        {isEdit && (
+          <Card className="bg-white border-[#EFEBE4]">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="font-['Cormorant_Garamond'] text-xl text-[#2D2420]">
+                Reference Images
+              </CardTitle>
+              <label className="flex items-center gap-2 px-4 py-2 border border-[#C05C3B] text-[#C05C3B] rounded-full cursor-pointer hover:bg-[#C05C3B]/10 transition-colors text-sm font-medium">
+                <Upload className="w-4 h-4" />
+                {uploadingImage ? "Uploading..." : "Upload Image"}
+                <input type="file" className="hidden" onChange={(e) => handleImageUpload(e, "reference")} accept=".jpg,.jpeg,.png,.webp" disabled={uploadingImage} data-testid="reference-image-upload" />
+              </label>
+            </CardHeader>
+            <CardContent>
+              {orderImages.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {orderImages.map((img) => (
+                    <div key={img.id} className="group relative aspect-square rounded-xl overflow-hidden bg-[#F7F2EB]">
+                      <img src={getImageUrl(img)} alt={img.image_type || "Reference"} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                        <span className="text-white text-xs capitalize px-2 py-1 bg-black/40 rounded">{img.image_type?.replace("_", " ")}</span>
+                        <Button size="icon" variant="destructive" onClick={() => handleDeleteImage(img.id)} className="rounded-full w-8 h-8 bg-[#B85450]/90">
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-[#8A7D76]">
+                  <ImageIcon className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">No reference images uploaded yet</p>
+                  <p className="text-xs mt-1">Upload design references, neck patterns, or fabric samples</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Measurements (Single Section for Order) */}
         <Card className="bg-white border-[#EFEBE4]">
