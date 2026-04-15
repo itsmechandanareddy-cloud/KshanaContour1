@@ -1,33 +1,25 @@
-# Kshana Contour Boutique - Product Requirements Document
-
-## Original Problem Statement
-Build a website for Kshana Contour Boutique with customer portal and admin portal including partnership management.
+# Kshana Contour Boutique - PRD
 
 ## Architecture
-- **Backend**: FastAPI + MongoDB
-- **Frontend**: React + TailwindCSS + Shadcn UI
-- **Storage**: Emergent Object Storage
+- **Backend**: FastAPI + MongoDB | **Frontend**: React + TailwindCSS + Shadcn UI | **Storage**: Emergent Object Storage
 
-## What's Been Implemented
-- [x] Public landing page, gallery, services, contact
-- [x] Admin & Customer JWT authentication
-- [x] Order CRUD with measurements, billing, payments, delete with reason
+## Implemented Features
+- [x] Landing page, Gallery, Services, Contact
+- [x] Admin & Customer JWT auth
+- [x] Order CRUD (items, measurements, billing, payments, delete with reason)
 - [x] Per-item reference image uploads + neck design references
 - [x] Invoice/print generation
 - [x] WhatsApp messaging on status change
-- [x] Employee management (Master/Tailor/Worker types)
-- [x] Employee work assignment, delete, documents
-- [x] Gallery with file upload
-- [x] Materials tracking
-- [x] Reports: Net summary (Income/Outgoing/Profit)
-- [x] Reports: Financial cards with view details
-- [x] Reports: Clickable status cards (Pending/WIP/Ready/Due Soon)
-- [x] Partnership: Chandana & Akanksha investment tracking
-- [x] Partnership: Kshana Account (income/SBI outgoing)
-- [x] Partnership: Profit split calculation (investments returned first, then 50/50)
-- [x] Partnership: Monthly breakdown table
-- [x] Partnership: View Details for each partner + Kshana account
-- [x] 70+ partnership entries seeded from real data
+- [x] Employee management (Master/Tailor/Worker), work assignment, delete, docs
+- [x] Gallery with file upload (object storage)
+- [x] Materials tracking with Edit/Delete
+- [x] Reports: Net summary, financial cards, clickable status cards
+- [x] **Partnership page** (separate admin page):
+  - Chandana/Akanksha investment CRUD (add/edit/delete records)
+  - Kshana Account (income auto-linked to orders, manual outgoing entries)
+  - 70+ real entries seeded, monthly breakdown table
+  - Profit split: investments returned first, then 50/50
+- [x] All Select dropdowns fixed (empty string → undefined)
 
 ## Test Credentials
 - **Admin**: Phone: 9876543210, Password: admin123
