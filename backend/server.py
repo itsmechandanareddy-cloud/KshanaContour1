@@ -21,53 +21,42 @@ import secrets
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# ============== OBJECT STORAGE CONFIG ==============
-STORAGE_URL = "https://integrations.emergentagent.com/objstore/api/v1/storage"
-EMERGENT_KEY = os.environ.get("EMERGENT_LLM_KEY")
-APP_NAME = "kshana-contour"
-storage_key = None
+# ============== CLOUD STORAGE CONFIG (Cloudinary) ==============
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
-def init_storage():
-    """Initialize storage - call once at startup"""
-    global storage_key
-    if storage_key:
-        return storage_key
-    if not EMERGENT_KEY:
-        logger.warning("EMERGENT_LLM_KEY not set - storage disabled")
-        return None
-    try:
-        resp = requests.post(f"{STORAGE_URL}/init", json={"emergent_key": EMERGENT_KEY}, timeout=30)
-        resp.raise_for_status()
-        storage_key = resp.json()["storage_key"]
-        logger.info("Object storage initialized successfully")
-        return storage_key
-    except Exception as e:
-        logger.error(f"Storage init failed: {e}")
-        return None
+CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL")
+if CLOUDINARY_URL:
+    # CLOUDINARY_URL format: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+    cloudinary.config(cloudinary_url=CLOUDINARY_URL)
+    logger.info("Cloudinary storage initialized successfully")
+else:
+    logger.warning("CLOUDINARY_URL not set - file uploads disabled")
 
 def put_object(path: str, data: bytes, content_type: str) -> dict:
-    """Upload file to object storage"""
-    key = init_storage()
-    if not key:
-        raise HTTPException(status_code=500, detail="Storage not available")
-    resp = requests.put(
-        f"{STORAGE_URL}/objects/{path}",
-        headers={"X-Storage-Key": key, "Content-Type": content_type},
-        data=data, timeout=120
+    """Upload file to Cloudinary"""
+    if not CLOUDINARY_URL:
+        raise HTTPException(status_code=500, detail="Storage not configured. Set CLOUDINARY_URL.")
+    import io
+    result = cloudinary.uploader.upload(
+        io.BytesIO(data),
+        public_id=path,
+        resource_type="auto",
+        folder="kshana-contour"
     )
-    resp.raise_for_status()
-    return resp.json()
+    return {"url": result["secure_url"], "public_id": result["public_id"]}
 
 def get_object(path: str) -> tuple:
-    """Download file from object storage"""
-    key = init_storage()
-    if not key:
-        raise HTTPException(status_code=500, detail="Storage not available")
-    resp = requests.get(
-        f"{STORAGE_URL}/objects/{path}",
-        headers={"X-Storage-Key": key}, timeout=60
-    )
-    resp.raise_for_status()
+    """Get file URL from Cloudinary (redirect to URL instead of proxying)"""
+    if not CLOUDINARY_URL:
+        raise HTTPException(status_code=500, detail="Storage not configured")
+    # Build the Cloudinary URL directly
+    url = cloudinary.CloudinaryImage(f"kshana-contour/{path}").build_url(secure=True)
+    # Fetch and return the content
+    resp = requests.get(url, timeout=60)
+    if resp.status_code != 200:
+        raise HTTPException(status_code=404, detail="File not found")
     return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
 
 ROOT_DIR = Path(__file__).parent
@@ -1725,12 +1714,6 @@ app.add_middleware(
 # ============== STARTUP EVENT ==============
 @app.on_event("startup")
 async def startup_event():
-    # Initialize object storage
-    try:
-        init_storage()
-    except Exception as e:
-        logger.warning(f"Storage initialization skipped: {e}")
-    
     # Create indexes
     await db.customers.create_index("phone", unique=True)
     await db.admins.create_index("phone", unique=True)
