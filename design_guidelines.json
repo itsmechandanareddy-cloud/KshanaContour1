@@ -1,116 +1,86 @@
 {
-  "theme_and_archetype": {
-    "theme": "Light",
-    "archetype": "1 (Organic & Earthy)",
-    "description": "A high-end, bespoke tailoring boutique dashboard that balances the aesthetic beauty of a fashion portfolio with the data-density required for an admin CRM. Focuses on warm terracotta, rust, and tan tones to evoke artisanal craftsmanship."
-  },
+  "theme": "light",
+  "archetype": "Archetype 5 (Jewel & Luxury) - Light Variant / Old Money Editorial",
   "colors": {
-    "background": {
-      "app": "#FDFBF7",
-      "surface": "#FFFFFF",
-      "surface_alt": "#F7F2EB",
-      "surface_hover": "#F2EBE1"
-    },
-    "text": {
-      "primary": "#2D2420",
-      "secondary": "#5C504A",
-      "tertiary": "#8A7D76",
-      "inverse": "#FDFBF7"
-    },
-    "brand": {
-      "primary": "#C05C3B",
-      "primary_hover": "#A84C2F",
-      "secondary": "#D19B5A",
-      "accent": "#8C3B24"
-    },
-    "status": {
-      "success": "#7E8B76",
-      "warning": "#D4A373",
-      "error": "#B85450",
-      "info": "#7A8B99"
-    },
-    "border": {
-      "default": "#EFEBE4",
-      "focus": "#C05C3B",
-      "subtle": "#F2EBE1"
-    }
+    "background": "#FDFBF7",
+    "surface": "#F7F2EB",
+    "text_primary": "#2D2420",
+    "text_secondary": "rgba(45, 36, 32, 0.6)",
+    "accent_primary": "#2D2420",
+    "accent_secondary": "#D19B5A",
+    "border": "rgba(45, 36, 32, 0.1)",
+    "error": "#9A3E3E",
+    "success": "#7E8B76",
+    "terracotta": "#C05C3B"
   },
   "typography": {
-    "font_families": {
-      "heading": "Cormorant Garamond, serif",
-      "body": "Manrope, sans-serif"
-    },
-    "heading_styles": {
-      "h1": "text-4xl sm:text-5xl font-light tracking-tight text-[#2D2420]",
-      "h2": "text-2xl sm:text-3xl font-medium tracking-tight text-[#2D2420]",
-      "h3": "text-xl sm:text-2xl font-medium tracking-tight text-[#2D2420]",
-      "h4": "text-lg sm:text-xl font-semibold text-[#2D2420]"
-    },
-    "body_styles": {
-      "default": "text-base font-normal leading-relaxed text-[#5C504A]",
-      "small": "text-sm font-normal text-[#8A7D76]",
-      "label": "text-xs font-bold uppercase tracking-[0.2em] text-[#8C3B24]"
-    }
+    "heading_font": "Cormorant Garamond",
+    "body_font": "Manrope",
+    "strategies": [
+      "Headings should primarily use font-light or font-normal to emphasize elegance.",
+      "Overlines and small labels MUST be uppercase, tiny (text-xs), and widely spaced (tracking-[0.2em]).",
+      "Do not use generic sans for any main headings.",
+      "Line height: leading-none for massive headers (text-5xl+), leading-relaxed for body.",
+      "Body font (Manrope) provides a crisp, modern geometric contrast to the classic serif headings."
+    ]
   },
   "spacing_and_layout": {
-    "container_padding": "px-6 md:px-12 lg:px-24",
-    "section_gap": "gap-16 md:gap-24",
-    "card_padding": "p-6 md:p-8",
-    "border_radius": {
-      "card": "rounded-2xl",
-      "button": "rounded-full",
-      "input": "rounded-xl"
+    "philosophy": "Editorial Minimalism. Treat the screen like a high-end fashion magazine spread. Massive negative space.",
+    "scale": "Generous use of py-24, py-32, gap-16, gap-24.",
+    "grids": "Mode A ('Tetris' Grid) for Marketing/Gallery. Asymmetric, overlapping images. Mode B for Admin Dashboard.",
+    "borders": "Ultra-thin 1px borders (border-[#2D2420]/10) to define sections instead of heavy shadows."
+  },
+  "motion_and_interaction": {
+    "hover_states": "Images scale slowly (duration-700) on hover. Buttons should invert colors or slightly fade (bg-[#2D2420]/90).",
+    "scroll": "Smooth scrolling (Lenis) is mandatory for the landing page.",
+    "transitions": "Use easing for all transitions. Avoid bouncy/springy animations; use slow, deliberate fades and slides."
+  },
+  "component_guidelines": {
+    "landing_page": "Avoid Shadcn Cards. Use raw HTML/Tailwind for asymmetric, fluid layouts. Large typography (text-6xl+).",
+    "dashboard": "Use Shadcn components but strip the 'Vercel-look'. Use flat rectangular styles with 1px borders (border-[#2D2420]/10). No border-radius (rounded-none) for a sharp, tailored look.",
+    "forms": "Inputs should have underline-only borders (border-b) or very thin, sharp rectangles. No pill-shaped inputs. Use rounded-none.",
+    "buttons": "Sharp edges (rounded-none). Primary button: bg-[#2D2420] text-[#FDFBF7]. Secondary: border border-[#2D2420] text-[#2D2420].",
+    "cards": "Remove shadows. Use flat surfaces with subtle 1px borders. Add p-6 or p-8 for generous internal breathing room."
+  },
+  "media_and_images": [
+    {
+      "category": "hero",
+      "url": "https://images.unsplash.com/photo-1762605135012-56a59a059e60?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwyfHxlbGVnYW50JTIwYm91dGlxdWUlMjBmYXNoaW9uJTIwbW9kZWwlMjBlZGl0b3JpYWx8ZW58MHx8fHwxNzc2MjQ1NzkzfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Woman in beige coat on stairs. Use for the main hero section of the landing page.",
+      "placement": "landing_page_hero"
     },
-    "dashboard_grid": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
-    "bento_grid": "grid grid-cols-1 md:grid-cols-8 lg:grid-cols-12 gap-8"
-  },
-  "surface_strategies": {
-    "header": "bg-[#FDFBF7]/90 backdrop-blur-xl border-b border-[#EFEBE4] sticky top-0 z-50",
-    "card": "bg-white border border-[#EFEBE4] shadow-[0_4px_24px_-8px_rgba(139,102,85,0.08)] transition-all duration-300 hover:shadow-[0_8px_32px_-8px_rgba(139,102,85,0.12)] hover:-translate-y-1",
-    "input": "bg-[#F7F2EB] border-transparent focus:bg-white focus:border-[#C05C3B] focus:ring-2 focus:ring-[#C05C3B]/20 transition-all",
-    "button_primary": "bg-[#C05C3B] text-white hover:bg-[#A84C2F] shadow-[0_4px_12px_rgba(192,92,59,0.25)] hover:shadow-[0_6px_16px_rgba(192,92,59,0.35)] transition-all",
-    "button_secondary": "bg-transparent border border-[#EFEBE4] text-[#2D2420] hover:border-[#C05C3B] hover:text-[#C05C3B] transition-all"
-  },
-  "components_customization": {
-    "tables": "Go cardless. Use subtle borders on rows (`border-b border-[#EFEBE4]`). Headers should be `text-xs uppercase tracking-[0.1em] text-[#8A7D76] bg-[#F7F2EB] py-4 px-6`.",
-    "forms": "Use highly structured multi-column layouts for the Order Creation form (measurements take up 2 cols, neck designs side-by-side). Labels should be subtle. Inputs should be warm-tinted and softly rounded.",
-    "badges": "For order statuses (WIP, Due, Delivered): Soft pastel backgrounds with dark, high-contrast text. E.g., WIP = `bg-[#D19B5A]/20 text-[#8C3B24]`. Warning (2 days before) = `bg-[#B85450]/15 text-[#B85450]`.",
-    "charts": "Recharts with warm palettes. Bars: #C05C3B and #D19B5A. Lines: smooth, with area gradients under them."
+    {
+      "category": "about",
+      "url": "https://images.unsplash.com/photo-1769107805465-bfd41863f1a0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzN8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwZmFzaGlvbiUyMHRhaWxvcmluZyUyMGJvdXRpcXVlJTIwaW50ZXJpb3J8ZW58MHx8fHwxNzc2MjQ1NzY4fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Boutique interior with dresses on rack.",
+      "placement": "landing_page_about"
+    },
+    {
+      "category": "gallery",
+      "url": "https://images.unsplash.com/photo-1762376128087-bc29c6df08c0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwxfHxlbGVnYW50JTIwYm91dGlxdWUlMjBmYXNoaW9uJTIwbW9kZWwlMjBlZGl0b3JpYWx8ZW58MHx8fHwxNzc2MjQ1NzkzfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Woman in patterned dress peeking around a corner.",
+      "placement": "gallery_preview_1"
+    },
+    {
+      "category": "services",
+      "url": "https://images.unsplash.com/photo-1637626402288-e49375aa45da?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2ODh8MHwxfHNlYXJjaHwxfHx0YWlsb3JpbmclMjBzZXdpbmclMjBuZWVkbGUlMjB0aHJlYWQlMjBzaWxrJTIwbWFjcm98ZW58MHx8fHwxNzc2MjQ1NzkzfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Scissors cutting wire on black background. Use for tailoring precision service.",
+      "placement": "services_section"
+    }
+  ],
+  "accessibility": {
+    "focus_states": "focus:ring-1 focus:ring-[#2D2420] focus:ring-offset-2 focus:ring-offset-[#FDFBF7]",
+    "contrast": "Ensure #2D2420 text on #FDFBF7 meets APCA guidelines for high contrast.",
+    "testing_attributes": "All interactive elements MUST include data-testid attribute with kebab-case (e.g., data-testid='hero-cta-button')"
   },
   "icons": {
     "library": "lucide-react",
-    "style": "strokeWidth={1.5} text-[#5C504A]"
-  },
-  "animations": {
-    "hover": "transition-all duration-300 ease-out",
-    "page_load": "framer-motion standard fade-up (y: 20, opacity: 0 -> y: 0, opacity: 1, duration: 0.5, staggerChildren: 0.1)",
-    "micro_interactions": "Buttons scale down slightly on active (`active:scale-95`)."
-  },
-  "image_urls": {
-    "login_hero": {
-      "url": "https://images.unsplash.com/photo-1753162658094-86e570c6a707?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MjJ8MHwxfHNlYXJjaHwxfHx0YWlsb3IlMjBtZWFzdXJpbmclMjB0YXBlfGVufDB8fHx8MTc3NjIwMjg5MXww&ixlib=rb-4.1.0&q=85",
-      "description": "Fashion designer working on patterns in her studio. Perfect for login background or about section."
-    },
-    "gallery_1": {
-      "url": "https://images.unsplash.com/photo-1549261472-fcd48d0b6709?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwxfHxmYXNoaW9uJTIwYm91dGlxdWUlMjB0YWlsb3JpbmclMjBmYWJyaWN8ZW58MHx8fHwxNzc2MjAyODgwfDA&ixlib=rb-4.1.0&q=85",
-      "description": "Woman in blue sari dress, showcasing traditional tailoring."
-    },
-    "gallery_2": {
-      "url": "https://images.unsplash.com/photo-1769103948746-8592931bbdad?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODF8MHwxfHNlYXJjaHwyfHx3b21hbiUyMGluJTIwYmVhdXRpZnVsJTIwc2FyZWV8ZW58MHx8fHwxNzc2MjAyODkxfDA&ixlib=rb-4.1.0&q=85",
-      "description": "Women in beautiful sarees, great for gallery."
-    },
-    "texture_bg": {
-      "url": "https://images.pexels.com/photos/7264429/pexels-photo-7264429.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-      "description": "Terracotta texture for overlay or secondary backgrounds in the customer portal."
-    }
+    "stroke_width": 1.5,
+    "style": "Minimalist, thin strokes. Size 20px for standard icons, 16px for inline."
   },
   "instructions_to_main_agent": [
-    "Strictly follow the color palette provided. Do NOT default to standard blue/gray SaaS colors. Use the terracotta and warm stone colors to convey an artisanal tailoring boutique.",
-    "For the Customer Portal: Create an elegant, editorial feel using Cormorant Garamond for headings. Generous whitespace, beautiful imagery, and clear order tracking are paramount.",
-    "For the Admin Dashboard: Data density is needed. Use Manrope for data tables. Implement Shadcn UI components but heavily override borders and backgrounds to match the #EFEBE4 border color and #FFFFFF/#F7F2EB backgrounds.",
-    "Implement the large order form carefully: group measurements logically (Neck, Sleeves, Body) using CSS Grids. Incorporate standard tailwind-compatible radio buttons and select menus.",
-    "Always apply `data-testid` to interactive elements. E.g., `data-testid='login-button'`, `data-testid='add-measurement-button'`.",
-    "Use standard `lucide-react` icons. Make sure the WhatsApp button clearly floats or is prominently displayed on the customer portal.",
-    "In the Reports Dashboard, use Recharts with our #C05C3B and #D19B5A colors. Include logic to highlight orders within 2 days of delivery using a distinct warning style (#D4A373)."
+    "Apply Manrope for all standard text (install via Google Fonts if not present) and keep Cormorant Garamond for headings.",
+    "In the Dashboard, remove all heavy shadows from cards. Override Shadcn rounded corners with rounded-none or max rounded-sm for a sharp editorial aesthetic.",
+    "The landing page should feature generous padding, subtle border lines (1px solid #2D2420 with 10% opacity) separating sections, and a highly elegant layout with overlapping images."
   ]
 }
