@@ -8,10 +8,9 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
-import { ArrowLeft, Plus, Trash2, IndianRupee, Save, Printer, Upload, X, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, IndianRupee, Save, Printer, Upload, X, Image as ImageIcon, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 const SERVICE_TYPES = [
@@ -80,6 +79,7 @@ const OrderForm = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [generateInvoice, setGenerateInvoice] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -246,6 +246,7 @@ const OrderForm = () => {
           description: formData.description
         }, { headers });
         toast.success("Order updated successfully");
+        navigate("/admin/orders");
       } else {
         const payload = {
           customer_name: formData.customer_name,
@@ -263,11 +264,15 @@ const OrderForm = () => {
           advance_mode: formData.advance_mode,
           description: formData.description
         };
-        await axios.post(`${API}/orders`, payload, { headers });
+        const resp = await axios.post(`${API}/orders`, payload, { headers });
+        const newOrderId = resp.data?.order_id;
         toast.success("Order created successfully");
+        if (generateInvoice && newOrderId) {
+          navigate(`/admin/invoice/${newOrderId}`);
+        } else {
+          navigate("/admin/orders");
+        }
       }
-      
-      navigate("/admin/orders");
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to save order");
     } finally {
@@ -346,9 +351,22 @@ const OrderForm = () => {
                 Invoice
               </Button>
             )}
+            {!isEdit && (
+              <Button
+                type="submit"
+                disabled={saving}
+                onClick={() => setGenerateInvoice(true)}
+                className="bg-[#2D2420] hover:bg-[#2D2420]/90 text-[#FDFBF7] rounded-full px-6"
+                data-testid="save-and-invoice-button"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                {saving ? "Saving..." : "Save & Invoice"}
+              </Button>
+            )}
             <Button
               type="submit"
               disabled={saving}
+              onClick={() => setGenerateInvoice(false)}
               className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white rounded-full px-6"
               data-testid="save-order-button"
             >
@@ -777,7 +795,7 @@ const OrderForm = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* Summary */}
+              {/* Balance & Invoice */}
               <div className="bg-[#F7F2EB] rounded-2xl p-6 space-y-3">
                 <div className="flex justify-between text-[#5C504A]">
                   <span>Subtotal ({items.length} item{items.length > 1 ? 's' : ''})</span>
@@ -799,6 +817,19 @@ const OrderForm = () => {
                   <span>Balance Due</span>
                   <span>{formatCurrency(balance)}</span>
                 </div>
+                {isEdit && (
+                  <div className="pt-3 border-t border-[#EFEBE4]">
+                    <Button
+                      type="button"
+                      onClick={() => navigate(`/admin/invoice/${orderId}`)}
+                      className="w-full bg-[#2D2420] hover:bg-[#2D2420]/90 text-[#FDFBF7] rounded-none text-xs uppercase tracking-[0.1em]"
+                      data-testid="billing-view-invoice"
+                    >
+                      <Printer className="w-4 h-4 mr-2" />
+                      View Invoice
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Advance Payment (New Order Only) */}
