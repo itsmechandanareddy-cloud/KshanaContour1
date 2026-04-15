@@ -157,8 +157,8 @@ class AdminLogin(BaseModel):
     password: str
 
 class CustomerLogin(BaseModel):
-    phone: str
-    dob: str  # Format: YYYY-MM-DD or DD-MM-YYYY
+    name: str
+    password: str
 
 class CustomerCreate(BaseModel):
     name: str
@@ -320,31 +320,34 @@ async def admin_login(data: AdminLogin, response: Response):
 
 @api_router.post("/auth/customer/login")
 async def customer_login(data: CustomerLogin, response: Response):
-    customer = await db.customers.find_one({"phone": data.phone})
+    # Find customer by name (case-insensitive)
+    customer = await db.customers.find_one({"name": {"$regex": f"^{data.name}$", "$options": "i"}})
     if not customer:
         raise HTTPException(status_code=401, detail="Customer not found")
     
-    # DOB is the password - normalize format
-    stored_dob = customer.get("dob", "")
-    input_dob = data.dob.replace("/", "-")
+    # Check password (hashed) - default password is phone number
+    stored_hash = customer.get("password_hash")
+    if stored_hash:
+        if not verify_password(data.password, stored_hash):
+            raise HTTPException(status_code=401, detail="Invalid password")
+    else:
+        # Legacy: if no password_hash, check against phone number directly
+        if data.password != customer.get("phone", ""):
+            raise HTTPException(status_code=401, detail="Invalid password")
+        # Migrate: hash and store the password
+        await db.customers.update_one(
+            {"_id": customer["_id"]},
+            {"$set": {"password_hash": hash_password(data.password)}}
+        )
     
-    # Try multiple formats
-    if stored_dob != input_dob:
-        # Try reversing DD-MM-YYYY to YYYY-MM-DD or vice versa
-        parts = input_dob.split("-")
-        if len(parts) == 3:
-            reversed_dob = f"{parts[2]}-{parts[1]}-{parts[0]}"
-            if stored_dob != reversed_dob:
-                raise HTTPException(status_code=401, detail="Invalid date of birth")
-    
-    token = create_access_token(str(customer["_id"]), customer["phone"], "customer")
+    token = create_access_token(str(customer["_id"]), customer.get("phone", ""), "customer")
     response.set_cookie(
         key="access_token", value=token, httponly=True, secure=False,
         samesite="lax", max_age=86400, path="/"
     )
     return {
         "id": str(customer["_id"]),
-        "phone": customer["phone"],
+        "phone": customer.get("phone", ""),
         "name": customer["name"],
         "role": "customer",
         "token": token
@@ -378,6 +381,51 @@ async def get_customer(customer_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Customer not found")
     return customer
 
+@api_router.put("/customers/{customer_id}/reset-password")
+async def reset_customer_password(customer_id: str, request: Request):
+    """Admin resets customer password back to their phone number"""
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    customer = await db.customers.find_one({"_id": ObjectId(customer_id)})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    new_password = customer.get("phone", "000000")
+    await db.customers.update_one(
+        {"_id": ObjectId(customer_id)},
+        {"$set": {"password_hash": hash_password(new_password)}}
+    )
+    return {"message": f"Password reset to phone number ({new_password})"}
+
+@api_router.put("/customers/{customer_id}")
+async def update_customer(customer_id: str, request: Request):
+    """Admin updates customer details"""
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    body = await request.json()
+    update_fields = {}
+    for field in ["name", "phone", "email", "gender", "dob"]:
+        if field in body:
+            update_fields[field] = body[field]
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    result = await db.customers.update_one({"_id": ObjectId(customer_id)}, {"$set": update_fields})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return {"message": "Customer updated"}
+
+@api_router.delete("/customers/{customer_id}")
+async def delete_customer(customer_id: str, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    result = await db.customers.delete_one({"_id": ObjectId(customer_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return {"message": "Customer deleted"}
+
+
 # ============== ORDER ENDPOINTS ==============
 @api_router.post("/orders")
 async def create_order(data: OrderCreate, request: Request):
@@ -391,6 +439,7 @@ async def create_order(data: OrderCreate, request: Request):
         customer_doc = {
             "name": data.customer_name,
             "phone": data.customer_phone,
+            "password_hash": hash_password(data.customer_phone),
             "email": data.customer_email,
             "age": data.customer_age,
             "gender": data.customer_gender,

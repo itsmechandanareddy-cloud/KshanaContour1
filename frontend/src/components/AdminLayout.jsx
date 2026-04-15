@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../App";
 import { 
   LayoutDashboard, ShoppingBag, Users, Package, 
-  BarChart3, Image, Star, LogOut, Menu, X, Scissors, Handshake
+  BarChart3, Image, Star, LogOut, Menu, X, Scissors, Handshake, UserCircle
 } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -12,6 +12,7 @@ const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43
 const navItems = [
   { path: "/admin", icon: LayoutDashboard, label: "Dashboard", exact: true },
   { path: "/admin/orders", icon: ShoppingBag, label: "Orders" },
+  { path: "/admin/customers", icon: UserCircle, label: "Customers" },
   { path: "/admin/employees", icon: Users, label: "Employees" },
   { path: "/admin/materials", icon: Package, label: "Materials" },
   { path: "/admin/reports", icon: BarChart3, label: "Reports" },

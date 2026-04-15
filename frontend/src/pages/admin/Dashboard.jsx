@@ -190,13 +190,13 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: "Orders", icon: ShoppingBag, path: "/admin/orders", color: "#C05C3B" },
+                { label: "Customers", icon: Users, path: "/admin/customers", color: "#D19B5A" },
                 { label: "Employees", icon: Users, path: "/admin/employees", color: "#2D2420" },
                 { label: "Materials", icon: Scissors, path: "/admin/materials", color: "#7E8B76" },
                 { label: "Reports", icon: BarChart3, path: "/admin/reports", color: "#D19B5A" },
                 { label: "Partnership", icon: Handshake, path: "/admin/partnership", color: "#7A8B99" },
                 { label: "Gallery", icon: ImageIcon, path: "/admin/gallery", color: "#C05C3B" },
                 { label: "Reviews", icon: Star, path: "/admin/reviews", color: "#D19B5A" },
-                { label: "Invoices", icon: FileText, path: "/admin/orders", color: "#2D2420" },
               ].map(({ label, icon: Icon, path, color }) => (
                 <button key={label} onClick={() => navigate(path)}
                   className="flex flex-col items-center gap-2 p-4 bg-white border border-[#EFEBE4] hover:border-[#D19B5A]/30 transition-all group">

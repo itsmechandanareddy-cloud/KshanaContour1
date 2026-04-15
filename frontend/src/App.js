@@ -17,6 +17,7 @@ import AdminGallery from "./pages/admin/Gallery";
 import AdminReviewsContact from "./pages/admin/ReviewsContact";
 import AdminInvoice from "./pages/admin/Invoice";
 import AdminPartnership from "./pages/admin/Partnership";
+import AdminCustomers from "./pages/admin/Customers";
 import CustomerHome from "./pages/customer/Home";
 import CustomerOrders from "./pages/customer/MyOrders";
 import CustomerOrderDetail from "./pages/customer/OrderDetail";
@@ -58,12 +59,12 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (phone, password, isAdmin = true) => {
+  const login = async (identifier, password, isAdmin = true) => {
     try {
       const endpoint = isAdmin ? "/auth/admin/login" : "/auth/customer/login";
       const payload = isAdmin 
-        ? { phone, password } 
-        : { phone, dob: password };
+        ? { phone: identifier, password } 
+        : { name: identifier, password };
       
       const response = await axios.post(`${API}${endpoint}`, payload, {
         withCredentials: true
@@ -245,6 +246,14 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <AdminReviewsContact />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/customers"
+            element={
+              <ProtectedRoute role="admin">
+                <AdminCustomers />
               </ProtectedRoute>
             }
           />

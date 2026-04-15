@@ -4,24 +4,24 @@ import { useAuth } from "../App";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/5x4gmkkq_image.png";
 const SKETCH_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/a4jq30f0_image.png";
 
 const CustomerLogin = () => {
-  const [phone, setPhone] = useState("");
-  const [dob, setDob] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!phone || !dob) { toast.error("Please fill all fields"); return; }
+    if (!name || !password) { toast.error("Please fill all fields"); return; }
     setLoading(true);
-    const result = await login(phone, dob, false);
+    const result = await login(name, password, false);
     setLoading(false);
     if (result.success) { toast.success("Welcome!"); navigate("/customer"); }
     else { toast.error(result.error); }
@@ -50,22 +50,38 @@ const CustomerLogin = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-sm">
           <div className="text-center mb-10">
-            <img src={LOGO_URL} alt="Kshana" className="w-12 h-12 mx-auto mb-6 object-cover opacity-80" />
             <h2 className="font-['Cormorant_Garamond'] text-3xl font-light text-[#2D2420]">Customer Portal</h2>
             <p className="text-xs uppercase tracking-[0.2em] text-[#2D2420]/40 mt-3">Track Your Orders</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-[0.1em] text-[#2D2420]/50">Phone Number</Label>
-              <Input type="tel" placeholder="Enter your phone number" value={phone} onChange={(e) => setPhone(e.target.value)}
+              <Label className="text-xs uppercase tracking-[0.1em] text-[#2D2420]/50">Name</Label>
+              <Input
+                type="text"
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="bg-transparent border-b border-[#2D2420]/15 rounded-none h-12 px-0 focus:border-[#2D2420] focus:ring-0"
-                data-testid="customer-phone-input" />
+                data-testid="customer-name-input"
+              />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-[0.1em] text-[#2D2420]/50">Date of Birth</Label>
-              <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)}
-                className="bg-transparent border-b border-[#2D2420]/15 rounded-none h-12 px-0 focus:border-[#2D2420] focus:ring-0"
-                data-testid="customer-dob-input" />
+              <Label className="text-xs uppercase tracking-[0.1em] text-[#2D2420]/50">Password</Label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-transparent border-b border-[#2D2420]/15 rounded-none h-12 px-0 pr-10 focus:border-[#2D2420] focus:ring-0"
+                  data-testid="customer-password-input"
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-[#8A7D76]">
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-[10px] text-[#8A7D76] mt-1">Default password is your phone number</p>
             </div>
             <Button type="submit" disabled={loading}
               className="w-full bg-[#2D2420] hover:bg-[#2D2420]/90 text-[#FDFBF7] rounded-none h-12 text-xs uppercase tracking-[0.15em] mt-8"
