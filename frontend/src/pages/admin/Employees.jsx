@@ -9,7 +9,7 @@ import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
-import { Plus, Phone, Mail, IndianRupee, Clock, User, FileText, Upload, Trash2, Eye, Briefcase, X } from "lucide-react";
+import { Plus, Phone, Mail, IndianRupee, Clock, User, FileText, Upload, Trash2, Eye, Briefcase, X, Edit } from "lucide-react";
 import { toast } from "sonner";
 
 const PAYMENT_MODES = ["cash", "upi", "card", "bank_transfer"];
@@ -20,6 +20,7 @@ const Employees = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showHoursModal, setShowHoursModal] = useState(false);
   const [showDocsModal, setShowDocsModal] = useState(false);
@@ -56,12 +57,29 @@ const Employees = () => {
     if (!newEmployee.name || !newEmployee.phone || !newEmployee.role) { toast.error("Fill required fields"); return; }
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`${API}/employees`, newEmployee, { headers: { Authorization: `Bearer ${token}` } });
-      toast.success("Employee added");
+      if (editingEmployee) {
+        await axios.put(`${API}/employees/${editingEmployee.id}`, newEmployee, { headers: { Authorization: `Bearer ${token}` } });
+        toast.success("Employee updated");
+      } else {
+        await axios.post(`${API}/employees`, newEmployee, { headers: { Authorization: `Bearer ${token}` } });
+        toast.success("Employee added");
+      }
       setShowAddModal(false);
+      setEditingEmployee(null);
       setNewEmployee({ name: "", phone: "", email: "", role: "tailor", pay_type: "weekly", address: "", joining_date: "", salary: 0, documents: [] });
       fetchData();
-    } catch { toast.error("Failed to add employee"); }
+    } catch { toast.error("Failed to save"); }
+  };
+
+  const openEditEmployee = (emp) => {
+    setNewEmployee({
+      name: emp.name || "", phone: emp.phone || "", email: emp.email || "",
+      role: emp.role || "tailor", pay_type: emp.pay_type || "weekly",
+      address: emp.address || "", joining_date: emp.joining_date || "",
+      salary: emp.salary || 0, documents: emp.documents || []
+    });
+    setEditingEmployee(emp);
+    setShowAddModal(true);
   };
 
   const handleDeleteEmployee = async (id) => {
@@ -155,7 +173,7 @@ const Employees = () => {
       <div className="space-y-6 animate-fade-in" data-testid="admin-employees">
         <div className="flex items-center justify-between">
           <h1 className="font-['Cormorant_Garamond'] text-4xl font-medium text-[#2D2420]">Employees</h1>
-          <Button onClick={() => setShowAddModal(true)} className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white rounded-full px-6" data-testid="add-employee-button">
+          <Button onClick={() => { setEditingEmployee(null); setNewEmployee({ name: "", phone: "", email: "", role: "tailor", pay_type: "weekly", address: "", joining_date: "", salary: 0, documents: [] }); setShowAddModal(true); }} className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white rounded-full px-6" data-testid="add-employee-button">
             <Plus className="w-4 h-4 mr-2" />Add Employee
           </Button>
         </div>
@@ -177,9 +195,12 @@ const Employees = () => {
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${roleBg(emp.role)}`}>{roleLabel(emp.role)}</span>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(emp)} className="text-[#B85450] hover:bg-[#B85450]/10" data-testid={`delete-emp-${emp.id}`}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => openEditEmployee(emp)} className="text-[#5C504A] hover:text-[#C05C3B]"><Edit className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(emp)} className="text-[#B85450] hover:bg-[#B85450]/10" data-testid={`delete-emp-${emp.id}`}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="space-y-1 text-sm">
@@ -242,7 +263,7 @@ const Employees = () => {
       {/* Add Employee Modal */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
         <DialogContent className="bg-[#FDFBF7] border-[#EFEBE4] max-w-lg">
-          <DialogHeader><DialogTitle className="font-['Cormorant_Garamond'] text-xl text-[#2D2420]">Add Employee</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="font-['Cormorant_Garamond'] text-xl text-[#2D2420]">{editingEmployee ? "Edit Employee" : "Add Employee"}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -296,7 +317,7 @@ const Employees = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddModal(false)} className="rounded-full">Cancel</Button>
-            <Button onClick={handleAddEmployee} className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white rounded-full">Add Employee</Button>
+            <Button onClick={handleAddEmployee} className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white rounded-full">{editingEmployee ? "Update" : "Add Employee"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -324,10 +345,16 @@ const Employees = () => {
                     </select>
                   </div>
                 )}
-                <div className="space-y-2"><Label>Hours Worked *</Label><Input type="number" step="0.5" value={newPayment.hours || 0} onChange={(e) => setNewPayment({ ...newPayment, hours: parseFloat(e.target.value) || 0 })} className="bg-[#F7F2EB] border-transparent rounded-xl" placeholder="e.g., 4" /></div>
+                <div className="space-y-2"><Label>Hours Worked *</Label><Input type="number" step="0.5" value={newPayment.hours || 0} onChange={(e) => {
+                  const hrs = parseFloat(e.target.value) || 0;
+                  setNewPayment({ ...newPayment, hours: hrs, amount: Math.round(hrs * (selectedEmployee?.salary || 0)) });
+                }} className="bg-[#F7F2EB] border-transparent rounded-xl" placeholder="e.g., 4" /></div>
               </>
             )}
-            <div className="space-y-2"><Label>Amount *</Label><Input type="number" value={newPayment.amount} onChange={(e) => setNewPayment({ ...newPayment, amount: parseFloat(e.target.value) || 0 })} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
+            <div className="space-y-2">
+              <Label>Amount *{(selectedEmployee?.pay_type === "hourly" || selectedEmployee?.role === "worker") ? ` (${selectedEmployee?.salary || 0}/hr × ${newPayment.hours || 0} hrs)` : ""}</Label>
+              <Input type="number" value={newPayment.amount} onChange={(e) => setNewPayment({ ...newPayment, amount: parseFloat(e.target.value) || 0 })} readOnly={(selectedEmployee?.pay_type === "hourly" || selectedEmployee?.role === "worker")} className={`bg-[#F7F2EB] border-transparent rounded-xl ${(selectedEmployee?.pay_type === "hourly" || selectedEmployee?.role === "worker") ? "cursor-default" : ""}`} />
+            </div>
             <div className="space-y-2"><Label>Date *</Label><Input type="date" value={newPayment.date} onChange={(e) => setNewPayment({ ...newPayment, date: e.target.value })} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
             <div className="space-y-2"><Label>Mode</Label>
               <select value={newPayment.mode} onChange={(e) => setNewPayment({ ...newPayment, mode: e.target.value })} className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none">

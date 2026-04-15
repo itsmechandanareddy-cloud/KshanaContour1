@@ -724,6 +724,17 @@ async def log_employee_hours(employee_id: str, data: EmployeeHours, request: Req
     
     return {"message": "Hours logged"}
 
+@api_router.put("/employees/{employee_id}")
+async def update_employee(employee_id: str, data: EmployeeCreate, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    update_data = {k: v for k, v in data.model_dump().items() if k != "documents"}
+    result = await db.employees.update_one({"_id": ObjectId(employee_id)}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return {"message": "Employee updated"}
+
 @api_router.delete("/employees/{employee_id}")
 async def delete_employee(employee_id: str, request: Request):
     user = await get_current_user(request)
