@@ -25,6 +25,7 @@ const Employees = () => {
   const [showDocsModal, setShowDocsModal] = useState(false);
   const [showWorkModal, setShowWorkModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(null); // { emp, type: 'hours' | 'payments' }
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [uploading, setUploading] = useState(false);
 
@@ -188,13 +189,15 @@ const Employees = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#EFEBE4]">
-                    <div className="text-center p-3 bg-[#F7F2EB] rounded-xl">
+                    <div className="text-center p-3 bg-[#F7F2EB] rounded-xl cursor-pointer hover:bg-[#EFEBE4] transition-colors" onClick={() => setShowDetailModal({ emp, type: "payments" })}>
                       <p className="text-sm text-[#8A7D76]">Total Paid</p>
                       <p className="font-semibold text-[#7E8B76]">{fmt(getTotalPaid(emp.payments))}</p>
+                      <p className="text-[10px] text-[#C05C3B] mt-1">View Details</p>
                     </div>
-                    <div className="text-center p-3 bg-[#F7F2EB] rounded-xl">
-                      <p className="text-sm text-[#8A7D76]">Hours Worked</p>
-                      <p className="font-semibold text-[#2D2420]">{getTotalHours(emp.hours_log)} hrs</p>
+                    <div className="text-center p-3 bg-[#F7F2EB] rounded-xl cursor-pointer hover:bg-[#EFEBE4] transition-colors" onClick={() => setShowDetailModal({ emp, type: "hours" })}>
+                      <p className="text-sm text-[#8A7D76]">{emp.pay_type === "hourly" ? "Hours Worked" : "Payment History"}</p>
+                      <p className="font-semibold text-[#2D2420]">{emp.pay_type === "hourly" ? `${getTotalHours(emp.hours_log)} hrs` : `${(emp.payments || []).length} payments`}</p>
+                      <p className="text-[10px] text-[#C05C3B] mt-1">View Details</p>
                     </div>
                   </div>
 
@@ -217,7 +220,7 @@ const Employees = () => {
                     <Button variant="outline" size="sm" onClick={() => { setSelectedEmployee(emp); setShowPaymentModal(true); }} className="border-[#EFEBE4] rounded-lg">
                       <IndianRupee className="w-4 h-4 mr-1" />Pay
                     </Button>
-                    {emp.role !== "master" && (
+                    {(emp.pay_type === "hourly" || emp.role === "worker") && (
                       <Button variant="outline" size="sm" onClick={() => { setSelectedEmployee(emp); setShowHoursModal(true); }} className="border-[#EFEBE4] rounded-lg">
                         <Clock className="w-4 h-4 mr-1" />Hours
                       </Button>
@@ -415,6 +418,134 @@ const Employees = () => {
             <Button variant="outline" onClick={() => setShowDeleteConfirm(null)} className="rounded-full">Cancel</Button>
             <Button onClick={() => handleDeleteEmployee(showDeleteConfirm?.id)} className="bg-[#B85450] hover:bg-[#9A4440] text-white rounded-full" data-testid="confirm-delete-emp">Delete</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Employee Detail Modal */}
+      <Dialog open={!!showDetailModal} onOpenChange={() => setShowDetailModal(null)}>
+        <DialogContent className="bg-[#FDFBF7] border-[#EFEBE4] max-w-2xl max-h-[80vh] overflow-y-auto">
+          {showDetailModal && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-['Cormorant_Garamond'] text-xl text-[#2D2420]">
+                  {showDetailModal.emp.name} — {showDetailModal.type === "payments" ? "Payment Details" : (showDetailModal.emp.pay_type === "hourly" ? "Work & Hours Details" : "Payment History")}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                {/* Summary */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center p-3 bg-[#F7F2EB] rounded-xl">
+                    <p className="text-xs text-[#8A7D76]">Role</p>
+                    <p className="font-semibold text-[#2D2420] capitalize">{showDetailModal.emp.role}</p>
+                  </div>
+                  <div className="text-center p-3 bg-[#F7F2EB] rounded-xl">
+                    <p className="text-xs text-[#8A7D76]">Pay Type</p>
+                    <p className="font-semibold text-[#2D2420] capitalize">{showDetailModal.emp.pay_type || "weekly"}</p>
+                  </div>
+                  <div className="text-center p-3 bg-[#F7F2EB] rounded-xl">
+                    <p className="text-xs text-[#8A7D76]">Rate</p>
+                    <p className="font-semibold text-[#2D2420]">{fmt(showDetailModal.emp.salary)} {showDetailModal.emp.pay_type === "hourly" ? "/hr" : "/wk"}</p>
+                  </div>
+                </div>
+
+                {/* Worker: Hours & Work Details */}
+                {showDetailModal.type === "hours" && showDetailModal.emp.pay_type === "hourly" && (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-sm font-bold text-[#5C504A]">Hours Worked — {getTotalHours(showDetailModal.emp.hours_log)} total hrs</h3>
+                      <span className="text-sm font-semibold text-[#7E8B76]">Earned: {fmt(getTotalHours(showDetailModal.emp.hours_log) * (showDetailModal.emp.salary || 0))}</span>
+                    </div>
+                    {showDetailModal.emp.hours_log?.length > 0 ? (
+                      <div className="space-y-2">
+                        {[...showDetailModal.emp.hours_log].reverse().map((h, i) => (
+                          <div key={i} className="p-3 bg-white rounded-xl border border-[#EFEBE4]">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-[#2D2420] text-sm">{h.date}</span>
+                                  <span className="text-xs bg-[#C05C3B]/10 text-[#C05C3B] px-2 py-0.5 rounded">{h.hours} hrs</span>
+                                </div>
+                                {h.order_id && h.order_id !== "general" && (
+                                  <p className="text-xs text-[#8A7D76] mt-1">Order: #{h.order_id}{h.item_index !== undefined && h.item_index !== null ? ` · Item ${h.item_index + 1}` : ""}</p>
+                                )}
+                                {h.notes && <p className="text-xs text-[#8A7D76] mt-1 italic">{h.notes}</p>}
+                              </div>
+                              <span className="font-semibold text-[#7E8B76] text-sm">{fmt(h.hours * (showDetailModal.emp.salary || 0))}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <p className="text-center text-[#8A7D76] py-4">No hours logged</p>}
+
+                    {/* Work Assignments */}
+                    {showDetailModal.emp.work_assignments?.length > 0 && (
+                      <>
+                        <h3 className="text-sm font-bold text-[#5C504A] pt-2">Work Assignments</h3>
+                        <div className="space-y-2">
+                          {[...showDetailModal.emp.work_assignments].reverse().map((w, i) => (
+                            <div key={i} className="flex justify-between p-3 bg-white rounded-xl border border-[#EFEBE4] text-sm">
+                              <div>
+                                <span className="font-medium text-[#2D2420]">Order #{w.order_id}</span>
+                                {w.item_index !== undefined && <span className="text-xs text-[#8A7D76] ml-2">Item {w.item_index + 1}</span>}
+                                <div className="text-xs text-[#8A7D76] mt-1">{w.date} · {w.hours} hrs{w.notes ? ` · ${w.notes}` : ""}</div>
+                              </div>
+                              <span className="font-semibold text-[#7E8B76]">{fmt(w.hours * (showDetailModal.emp.salary || 0))}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+
+                {/* Master/Tailor: Payment History (weekly) */}
+                {(showDetailModal.type === "hours" && showDetailModal.emp.pay_type !== "hourly") && (
+                  <>
+                    <h3 className="text-sm font-bold text-[#5C504A]">Weekly Payment History — {fmt(getTotalPaid(showDetailModal.emp.payments))} total</h3>
+                    {showDetailModal.emp.payments?.length > 0 ? (
+                      <div className="space-y-2">
+                        {[...showDetailModal.emp.payments].reverse().map((p, i) => (
+                          <div key={i} className="flex justify-between p-3 bg-white rounded-xl border border-[#EFEBE4]">
+                            <div>
+                              <span className="font-medium text-[#2D2420] text-sm">{p.date}</span>
+                              <div className="text-xs text-[#8A7D76] mt-1">
+                                <span className="capitalize px-1.5 py-0.5 bg-[#F7F2EB] rounded">{p.mode?.replace("_", " ")}</span>
+                                {p.notes && <span className="ml-2 italic">{p.notes}</span>}
+                              </div>
+                            </div>
+                            <span className="font-semibold text-[#7E8B76] text-sm">{fmt(p.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <p className="text-center text-[#8A7D76] py-4">No payments recorded</p>}
+                  </>
+                )}
+
+                {/* Payments View (Total Paid click) */}
+                {showDetailModal.type === "payments" && (
+                  <>
+                    <h3 className="text-sm font-bold text-[#5C504A]">All Payments — {fmt(getTotalPaid(showDetailModal.emp.payments))} total</h3>
+                    {showDetailModal.emp.payments?.length > 0 ? (
+                      <div className="space-y-2">
+                        {[...showDetailModal.emp.payments].reverse().map((p, i) => (
+                          <div key={i} className="flex justify-between p-3 bg-white rounded-xl border border-[#EFEBE4]">
+                            <div>
+                              <span className="font-medium text-[#2D2420] text-sm">{p.date}</span>
+                              <div className="text-xs text-[#8A7D76] mt-1">
+                                <span className="capitalize px-1.5 py-0.5 bg-[#F7F2EB] rounded">{p.mode?.replace("_", " ")}</span>
+                                {p.notes && <span className="ml-2 italic">{p.notes}</span>}
+                              </div>
+                            </div>
+                            <span className="font-semibold text-[#7E8B76] text-sm">{fmt(p.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <p className="text-center text-[#8A7D76] py-4">No payments recorded</p>}
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </AdminLayout>
