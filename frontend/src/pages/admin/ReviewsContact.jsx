@@ -12,9 +12,9 @@ const CONTACT_INFO = {
   phone1: "9187202605",
   phone2: "9108253760",
   whatsapp: "9187202605",
-  googleMaps: "https://maps.app.goo.gl/c7z46uTDaKbCNvNr9",
-  instagram: "https://www.instagram.com/kshana_contour",
-  googleReviews: "https://maps.app.goo.gl/c7z46uTDaKbCNvNr9"
+  googleMaps: "https://maps.app.goo.gl/3RAsjwkSV7S3FCCA8",
+  instagram: "https://www.instagram.com/kshana_contour?igsh=ZWl5eDBuemxrZnVm",
+  googleReviews: "https://maps.app.goo.gl/3RAsjwkSV7S3FCCA8"
 };
 
 const ReviewsContact = () => {

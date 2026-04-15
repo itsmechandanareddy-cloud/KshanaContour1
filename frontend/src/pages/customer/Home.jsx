@@ -108,8 +108,8 @@ const CustomerHome = () => {
             {[
               { href: "tel:+919187202605", icon: Phone, label: "Call", detail: "9187202605" },
               { href: "mailto:kshanaconture@gmail.com", icon: Mail, label: "Email", detail: "kshanaconture@gmail.com" },
-              { href: "https://maps.app.goo.gl/c7z46uTDaKbCNvNr9", icon: MapPin, label: "Visit", detail: "Google Maps" },
-              { href: "https://www.instagram.com/kshana_contour", icon: Instagram, label: "Follow", detail: "@kshana_contour" },
+              { href: "https://maps.app.goo.gl/3RAsjwkSV7S3FCCA8", icon: MapPin, label: "Visit", detail: "Google Maps" },
+              { href: "https://www.instagram.com/kshana_contour?igsh=ZWl5eDBuemxrZnVm", icon: Instagram, label: "Follow", detail: "@kshana_contour" },
             ].map(({ href, icon: Icon, label, detail }) => (
               <a key={label} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
                 className="text-center group">
@@ -123,7 +123,7 @@ const CustomerHome = () => {
 
         {/* Reviews */}
         <div className="text-center py-8">
-          <a href="https://maps.app.goo.gl/c7z46uTDaKbCNvNr9" target="_blank" rel="noopener noreferrer" className="inline-flex flex-col items-center gap-3 group">
+          <a href="https://maps.app.goo.gl/3RAsjwkSV7S3FCCA8" target="_blank" rel="noopener noreferrer" className="inline-flex flex-col items-center gap-3 group">
             <div className="flex gap-1">{[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-[#D19B5A] fill-[#D19B5A]" />)}</div>
             <p className="text-xs uppercase tracking-[0.15em] text-[#2D2420]/40 group-hover:text-[#D19B5A] transition-colors">View Google Reviews</p>
           </a>

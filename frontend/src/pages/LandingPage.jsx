@@ -171,7 +171,7 @@ const LandingPage = () => {
       {/* Reviews */}
       <section className="border-t border-[#2D2420]/10">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24 text-center">
-          <a href="https://maps.app.goo.gl/c7z46uTDaKbCNvNr9" target="_blank" rel="noopener noreferrer"
+          <a href="https://maps.app.goo.gl/3RAsjwkSV7S3FCCA8" target="_blank" rel="noopener noreferrer"
             className="inline-flex flex-col items-center gap-4 group" data-testid="google-reviews-link">
             <div className="flex gap-1">
               {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 text-[#D19B5A] fill-[#D19B5A]" />)}
@@ -193,7 +193,7 @@ const LandingPage = () => {
             {[
               { href: "tel:+919187202605", icon: Phone, title: "Call", detail: ["9187202605", "9108253760"] },
               { href: "mailto:kshanaconture@gmail.com", icon: Mail, title: "Email", detail: ["kshanaconture@gmail.com"] },
-              { href: "https://maps.app.goo.gl/c7z46uTDaKbCNvNr9", icon: MapPin, title: "Visit", detail: ["View on Google Maps"] },
+              { href: "https://maps.app.goo.gl/3RAsjwkSV7S3FCCA8", icon: MapPin, title: "Visit", detail: ["View on Google Maps"] },
             ].map(({ href, icon: Icon, title, detail }) => (
               <a key={title} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
                 className="bg-[#2D2420] p-10 text-center hover:bg-[#3D3430] transition-colors duration-300" data-testid={`${title.toLowerCase()}-contact`}>
@@ -209,7 +209,7 @@ const LandingPage = () => {
               data-testid="whatsapp-link">
               <MessageCircle className="w-4 h-4" strokeWidth={1.5} />WhatsApp
             </a>
-            <a href="https://www.instagram.com/kshana_contour" target="_blank" rel="noopener noreferrer"
+            <a href="https://www.instagram.com/kshana_contour?igsh=ZWl5eDBuemxrZnVm" target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 border border-[#FDFBF7]/20 text-[#FDFBF7] px-6 py-3 rounded-none hover:bg-[#FDFBF7] hover:text-[#2D2420] transition-all duration-300 text-xs uppercase tracking-[0.15em]"
               data-testid="instagram-link">
               <Instagram className="w-4 h-4" strokeWidth={1.5} />Instagram

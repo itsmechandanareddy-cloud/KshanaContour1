@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API } from "../../App";
 import { Button } from "../../components/ui/button";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, MessageCircle } from "lucide-react";
 
 const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/5x4gmkkq_image.png";
 
@@ -41,6 +41,37 @@ const Invoice = () => {
   };
 
   const handlePrint = () => window.print();
+
+  const sendInvoiceWhatsApp = () => {
+    if (!order) return;
+    const items = order.items?.map((item, i) => 
+      `${i + 1}. ${item.service_type} — ${formatCurrency(item.cost)}`
+    ).join("\n") || "";
+    
+    const msg = [
+      `*INVOICE — Kshana Contour*`,
+      `Order: #${order.order_id}`,
+      `Date: ${formatDate(order.order_date || order.created_at)}`,
+      ``,
+      `*Customer:* ${order.customer_name}`,
+      `*Delivery:* ${formatDate(order.delivery_date)}`,
+      ``,
+      `*Items:*`,
+      items,
+      ``,
+      `Subtotal: ${formatCurrency(order.subtotal)}`,
+      `Tax (${order.tax_percentage}%): ${formatCurrency(order.tax_amount)}`,
+      `*Total: ${formatCurrency(order.total)}*`,
+      `Paid: ${formatCurrency((order.payments || []).reduce((s, p) => s + p.amount, 0))}`,
+      order.balance > 0 ? `*Balance Due: ${formatCurrency(order.balance)}*` : `_PAID IN FULL_`,
+      ``,
+      `Thank you for choosing Kshana Contour!`,
+    ].join("\n");
+
+    const phone = order.customer_phone?.replace(/\D/g, "");
+    const fullPhone = phone?.startsWith("91") ? phone : `91${phone}`;
+    window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
 
   if (loading) {
     return (
@@ -80,6 +111,14 @@ const Invoice = () => {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <span className="flex-1 font-medium text-[#2D2420]">Invoice #{order.order_id}</span>
+        <Button
+          onClick={sendInvoiceWhatsApp}
+          className="bg-[#25D366] hover:bg-[#20BD5A] text-white rounded-full px-6"
+          data-testid="send-invoice-whatsapp"
+        >
+          <MessageCircle className="w-4 h-4 mr-2" />
+          Send via WhatsApp
+        </Button>
         <Button
           onClick={handlePrint}
           className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white rounded-full px-6"
