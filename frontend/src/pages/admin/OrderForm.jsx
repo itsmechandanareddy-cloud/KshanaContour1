@@ -389,7 +389,17 @@ const OrderForm = () => {
                 <Input
                   type="date"
                   value={formData.customer_dob}
-                  onChange={(e) => handleInputChange("customer_dob", e.target.value)}
+                  onChange={(e) => {
+                    handleInputChange("customer_dob", e.target.value);
+                    if (e.target.value) {
+                      const today = new Date();
+                      const birth = new Date(e.target.value);
+                      let age = today.getFullYear() - birth.getFullYear();
+                      const m = today.getMonth() - birth.getMonth();
+                      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                      handleInputChange("customer_age", age > 0 ? age : "");
+                    }
+                  }}
                   disabled={isEdit}
                   className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-xl"
                   data-testid="customer-dob-input"
@@ -410,9 +420,8 @@ const OrderForm = () => {
                 <Input
                   type="number"
                   value={formData.customer_age}
-                  onChange={(e) => handleInputChange("customer_age", e.target.value)}
-                  disabled={isEdit}
-                  className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-xl"
+                  readOnly
+                  className="bg-[#F7F2EB] border-transparent rounded-xl cursor-default"
                 />
               </div>
               <div className="space-y-2">
