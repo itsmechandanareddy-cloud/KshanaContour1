@@ -63,7 +63,12 @@ ROOT_DIR = Path(__file__).parent
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
+# For MongoDB Atlas (cloud) - add SSL certificate support
+import certifi
+if "mongodb+srv" in mongo_url or "mongodb.net" in mongo_url:
+    client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
+else:
+    client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # JWT Config
