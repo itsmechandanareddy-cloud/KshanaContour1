@@ -705,6 +705,19 @@ async def add_employee_payment(employee_id: str, data: EmployeePayment, request:
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Employee not found")
     
+    # Auto-log hours if payment includes hours (for workers)
+    if data.hours and data.hours > 0:
+        await db.employees.update_one(
+            {"_id": ObjectId(employee_id)},
+            {"$push": {"hours_log": {
+                "date": data.date,
+                "hours": data.hours,
+                "order_id": data.order_id or "",
+                "item_index": data.item_index,
+                "notes": data.notes or ""
+            }}}
+        )
+    
     return {"message": "Payment recorded"}
 
 @api_router.post("/employees/{employee_id}/hours")

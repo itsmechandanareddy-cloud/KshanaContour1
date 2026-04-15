@@ -162,7 +162,13 @@ const Employees = () => {
 
   const fmt = (a) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 0 }).format(a || 0);
   const getTotalPaid = (p) => (p || []).reduce((s, x) => s + x.amount, 0);
-  const getTotalHours = (h) => (h || []).reduce((s, x) => s + x.hours, 0);
+  const getTotalHours = (hoursLog, payments) => {
+    const logHours = (hoursLog || []).reduce((s, x) => s + (x.hours || 0), 0);
+    // Also count hours from payments that have hours field
+    const payHours = (payments || []).reduce((s, x) => s + (x.hours || 0), 0);
+    // Return max to avoid double counting (since payment now auto-logs hours)
+    return Math.max(logHours, payHours);
+  };
   const roleLabel = (r) => ({ master: "Master", tailor: "Tailor", worker: "Worker" }[r] || r);
   const roleBg = (r) => ({ master: "bg-[#D19B5A]/10 text-[#D19B5A]", tailor: "bg-[#C05C3B]/10 text-[#C05C3B]", worker: "bg-[#7A8B99]/10 text-[#7A8B99]" }[r] || "bg-[#F7F2EB] text-[#5C504A]");
 
@@ -217,7 +223,7 @@ const Employees = () => {
                     </div>
                     <div className="text-center p-3 bg-[#F7F2EB] rounded-xl cursor-pointer hover:bg-[#EFEBE4] transition-colors" onClick={() => setShowDetailModal({ emp, type: "hours" })}>
                       <p className="text-sm text-[#8A7D76]">{emp.pay_type === "hourly" ? "Hours Worked" : "Payment History"}</p>
-                      <p className="font-semibold text-[#2D2420]">{emp.pay_type === "hourly" ? `${getTotalHours(emp.hours_log)} hrs` : `${(emp.payments || []).length} payments`}</p>
+                      <p className="font-semibold text-[#2D2420]">{emp.pay_type === "hourly" ? `${getTotalHours(emp.hours_log, emp.payments)} hrs` : `${(emp.payments || []).length} payments`}</p>
                       <p className="text-[10px] text-[#C05C3B] mt-1">View Details</p>
                     </div>
                   </div>
@@ -241,11 +247,6 @@ const Employees = () => {
                     <Button variant="outline" size="sm" onClick={() => { setSelectedEmployee(emp); setShowPaymentModal(true); }} className="border-[#EFEBE4] rounded-lg">
                       <IndianRupee className="w-4 h-4 mr-1" />Pay
                     </Button>
-                    {(emp.pay_type === "hourly" || emp.role === "worker") && (
-                      <Button variant="outline" size="sm" onClick={() => { setSelectedEmployee(emp); setShowHoursModal(true); }} className="border-[#EFEBE4] rounded-lg">
-                        <Clock className="w-4 h-4 mr-1" />Hours
-                      </Button>
-                    )}
                     <Button variant="outline" size="sm" onClick={() => { setSelectedEmployee(emp); setShowWorkModal(true); }} className="border-[#EFEBE4] rounded-lg">
                       <Briefcase className="w-4 h-4 mr-1" />Assign
                     </Button>
@@ -500,8 +501,8 @@ const Employees = () => {
                 {showDetailModal.type === "hours" && showDetailModal.emp.pay_type === "hourly" && (
                   <>
                     <div className="flex justify-between items-center">
-                      <h3 className="text-sm font-bold text-[#5C504A]">Hours Worked — {getTotalHours(showDetailModal.emp.hours_log)} total hrs</h3>
-                      <span className="text-sm font-semibold text-[#7E8B76]">Earned: {fmt(getTotalHours(showDetailModal.emp.hours_log) * (showDetailModal.emp.salary || 0))}</span>
+                      <h3 className="text-sm font-bold text-[#5C504A]">Hours Worked — {getTotalHours(showDetailModal.emp.hours_log, showDetailModal.emp.payments)} total hrs</h3>
+                      <span className="text-sm font-semibold text-[#7E8B76]">Earned: {fmt(getTotalHours(showDetailModal.emp.hours_log, showDetailModal.emp.payments) * (showDetailModal.emp.salary || 0))}</span>
                     </div>
                     {showDetailModal.emp.hours_log?.length > 0 ? (
                       <div className="space-y-2">
