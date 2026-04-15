@@ -99,20 +99,9 @@ frontend/node_modules/.cache/default-development/24.pack
 frontend/node_modules/.cache/default-development/25.pack
 frontend/node_modules/.cache/default-development/28.pack
 frontend/node_modules/.cache/default-development/29.pack
--e 
-# Environment and credential files
-.env
-.env.*
-*.env
-credentials.json
-*.pem
-*.key
-.credentials
--e 
-# Environment and credential files
-.env
-.env.*
-*.env
+# Environment files - keep backend/.env and frontend/.env tracked for deployment
+.env.local
+.env.*.local
 credentials.json
 *.pem
 *.key
