@@ -37,7 +37,6 @@ const AdminLogin = () => {
             <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />Back
           </button>
           <div>
-            <img src={LOGO_URL} alt="Kshana" className="w-12 h-12 object-cover opacity-60 mb-8" />
             <h1 className="font-['Cormorant_Garamond'] text-5xl font-light text-[#FDFBF7] leading-tight">
               Admin<br />Portal
             </h1>
