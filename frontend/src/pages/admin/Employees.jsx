@@ -29,7 +29,7 @@ const Employees = () => {
   const [uploading, setUploading] = useState(false);
 
   const [newEmployee, setNewEmployee] = useState({
-    name: "", phone: "", email: "", role: "tailor", address: "", joining_date: "", salary: 0, documents: []
+    name: "", phone: "", email: "", role: "tailor", pay_type: "weekly", address: "", joining_date: "", salary: 0, documents: []
   });
   const [newPayment, setNewPayment] = useState({ amount: 0, date: "", mode: "cash", notes: "" });
   const [newHours, setNewHours] = useState({ date: "", hours: 0, order_id: "", item_index: 0, notes: "" });
@@ -58,7 +58,7 @@ const Employees = () => {
       await axios.post(`${API}/employees`, newEmployee, { headers: { Authorization: `Bearer ${token}` } });
       toast.success("Employee added");
       setShowAddModal(false);
-      setNewEmployee({ name: "", phone: "", email: "", role: "tailor", address: "", joining_date: "", salary: 0, documents: [] });
+      setNewEmployee({ name: "", phone: "", email: "", role: "tailor", pay_type: "weekly", address: "", joining_date: "", salary: 0, documents: [] });
       fetchData();
     } catch { toast.error("Failed to add employee"); }
   };
@@ -184,7 +184,7 @@ const Employees = () => {
                   <div className="space-y-1 text-sm">
                     <div className="flex items-center gap-2 text-[#5C504A]"><Phone className="w-4 h-4 text-[#8A7D76]" />{emp.phone}</div>
                     {emp.email && <div className="flex items-center gap-2 text-[#5C504A]"><Mail className="w-4 h-4 text-[#8A7D76]" />{emp.email}</div>}
-                    <div className="flex items-center gap-2 text-[#5C504A]"><IndianRupee className="w-4 h-4 text-[#8A7D76]" />Salary: {fmt(emp.salary)}{emp.role === "master" ? " /week" : ""}</div>
+                    <div className="flex items-center gap-2 text-[#5C504A]"><IndianRupee className="w-4 h-4 text-[#8A7D76]" />Rate: {fmt(emp.salary)} {emp.pay_type === "hourly" ? "/hour" : "/week"}</div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#EFEBE4]">
@@ -251,17 +251,28 @@ const Employees = () => {
                 <Input value={newEmployee.phone} onChange={(e) => setNewEmployee({ ...newEmployee, phone: e.target.value })} className="bg-[#F7F2EB] border-transparent rounded-xl" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label className="text-[#5C504A]">Type *</Label>
-                <select value={newEmployee.role} onChange={(e) => setNewEmployee({ ...newEmployee, role: e.target.value })} className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C05C3B]/20">
-                  <option value="master">Master (Weekly Pay)</option>
+                <select value={newEmployee.role} onChange={(e) => {
+                  const role = e.target.value;
+                  const defaultPay = role === "worker" ? "hourly" : "weekly";
+                  setNewEmployee({ ...newEmployee, role, pay_type: defaultPay });
+                }} className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C05C3B]/20">
+                  <option value="master">Master</option>
                   <option value="tailor">Tailor</option>
                   <option value="worker">Worker</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <Label className="text-[#5C504A]">Salary {newEmployee.role === "master" ? "(Weekly)" : "(Monthly)"}</Label>
+                <Label className="text-[#5C504A]">Pay Type</Label>
+                <select value={newEmployee.pay_type} onChange={(e) => setNewEmployee({ ...newEmployee, pay_type: e.target.value })} className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C05C3B]/20">
+                  <option value="weekly">Weekly</option>
+                  <option value="hourly">Hourly</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[#5C504A]">Rate ({newEmployee.pay_type === "hourly" ? "/hour" : "/week"})</Label>
                 <Input type="number" value={newEmployee.salary} onChange={(e) => setNewEmployee({ ...newEmployee, salary: parseFloat(e.target.value) || 0 })} className="bg-[#F7F2EB] border-transparent rounded-xl" />
               </div>
             </div>

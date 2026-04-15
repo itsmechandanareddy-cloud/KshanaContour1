@@ -245,6 +245,7 @@ class EmployeeCreate(BaseModel):
     phone: str
     email: Optional[str] = None
     role: str  # master / tailor / worker
+    pay_type: Optional[str] = "weekly"  # weekly / hourly
     address: Optional[str] = None
     joining_date: str
     salary: float
