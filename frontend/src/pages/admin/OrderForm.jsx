@@ -81,6 +81,8 @@ const OrderForm = () => {
   const [saving, setSaving] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [generateInvoice, setGenerateInvoice] = useState(false);
+  const [customerSuggestions, setCustomerSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -147,6 +149,32 @@ const OrderForm = () => {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const searchCustomers = async (query) => {
+    if (!query || query.length < 2 || isEdit) { setCustomerSuggestions([]); return; }
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API}/customers/search?q=${encodeURIComponent(query)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCustomerSuggestions(res.data);
+      setShowSuggestions(res.data.length > 0);
+    } catch { setCustomerSuggestions([]); }
+  };
+
+  const selectCustomer = (customer) => {
+    setFormData(prev => ({
+      ...prev,
+      customer_name: customer.name || "",
+      customer_phone: customer.phone || "",
+      customer_email: customer.email || "",
+      customer_age: customer.age || "",
+      customer_gender: customer.gender || "",
+      customer_dob: customer.dob || ""
+    }));
+    setShowSuggestions(false);
+    setCustomerSuggestions([]);
   };
 
   const handleItemChange = (index, field, value) => {
@@ -386,25 +414,55 @@ const OrderForm = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <Label className="text-[#5C504A]">Name *</Label>
                 <Input
                   value={formData.customer_name}
-                  onChange={(e) => handleInputChange("customer_name", e.target.value)}
+                  onChange={(e) => { handleInputChange("customer_name", e.target.value); searchCustomers(e.target.value); }}
+                  onFocus={() => customerSuggestions.length > 0 && setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   disabled={isEdit}
                   className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-xl"
+                  placeholder="Start typing to search..."
                   data-testid="customer-name-input"
+                  autoComplete="off"
                 />
+                {showSuggestions && customerSuggestions.length > 0 && !isEdit && (
+                  <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-white border border-[#EFEBE4] shadow-lg max-h-48 overflow-y-auto" data-testid="customer-suggestions">
+                    {customerSuggestions.map(c => (
+                      <button key={c.id} type="button" onMouseDown={() => selectCustomer(c)}
+                        className="w-full text-left px-4 py-3 hover:bg-[#F7F2EB] transition-colors border-b border-[#EFEBE4] last:border-0">
+                        <p className="text-sm font-medium text-[#2D2420]">{c.name}</p>
+                        <p className="text-xs text-[#8A7D76]">{c.phone}{c.email ? ` · ${c.email}` : ""}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <Label className="text-[#5C504A]">Phone *</Label>
                 <Input
                   value={formData.customer_phone}
-                  onChange={(e) => handleInputChange("customer_phone", e.target.value)}
+                  onChange={(e) => { handleInputChange("customer_phone", e.target.value); searchCustomers(e.target.value); }}
+                  onFocus={() => customerSuggestions.length > 0 && setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   disabled={isEdit}
                   className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-xl"
+                  placeholder="Start typing to search..."
                   data-testid="customer-phone-input"
+                  autoComplete="off"
                 />
+                {showSuggestions && customerSuggestions.length > 0 && !isEdit && (
+                  <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-white border border-[#EFEBE4] shadow-lg max-h-48 overflow-y-auto">
+                    {customerSuggestions.map(c => (
+                      <button key={c.id} type="button" onMouseDown={() => selectCustomer(c)}
+                        className="w-full text-left px-4 py-3 hover:bg-[#F7F2EB] transition-colors border-b border-[#EFEBE4] last:border-0">
+                        <p className="text-sm font-medium text-[#2D2420]">{c.name}</p>
+                        <p className="text-xs text-[#8A7D76]">{c.phone}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="text-[#5C504A]">Date of Birth *</Label>

@@ -373,6 +373,22 @@ async def get_customers(request: Request, page: int = 1, limit: int = 100):
         c["id"] = str(c.pop("_id"))
     return customers
 
+@api_router.get("/customers/search")
+async def search_customers(q: str, request: Request):
+    """Search customers by name or phone for autocomplete"""
+    await get_current_user(request)
+    if len(q) < 2:
+        return []
+    query = {"$or": [
+        {"name": {"$regex": q, "$options": "i"}},
+        {"phone": {"$regex": q}}
+    ]}
+    customers = await db.customers.find(query, {"_id": 1, "name": 1, "phone": 1, "email": 1, "dob": 1, "gender": 1, "age": 1}).to_list(10)
+    for c in customers:
+        c["id"] = str(c.pop("_id"))
+    return customers
+
+
 @api_router.get("/customers/{customer_id}")
 async def get_customer(customer_id: str, request: Request):
     await get_current_user(request)
@@ -433,9 +449,14 @@ async def create_order(data: OrderCreate, request: Request):
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    # Create or update customer
+    # Create or reuse customer — match by phone OR name (case-insensitive)
     customer = await db.customers.find_one({"phone": data.customer_phone})
     if not customer:
+        # Fallback: try matching by name (case-insensitive)
+        customer = await db.customers.find_one({"name": {"$regex": f"^{data.customer_name}$", "$options": "i"}})
+    
+    if not customer:
+        # New customer — create account with default password = phone
         customer_doc = {
             "name": data.customer_name,
             "phone": data.customer_phone,
@@ -450,6 +471,18 @@ async def create_order(data: OrderCreate, request: Request):
         customer_id = str(result.inserted_id)
     else:
         customer_id = str(customer["_id"])
+        # Update customer info if changed (email, age, gender, dob)
+        update_fields = {}
+        if data.customer_email and data.customer_email != customer.get("email"):
+            update_fields["email"] = data.customer_email
+        if data.customer_age and data.customer_age != customer.get("age"):
+            update_fields["age"] = data.customer_age
+        if data.customer_gender and data.customer_gender != customer.get("gender"):
+            update_fields["gender"] = data.customer_gender
+        if data.customer_dob and data.customer_dob != customer.get("dob"):
+            update_fields["dob"] = data.customer_dob
+        if update_fields:
+            await db.customers.update_one({"_id": customer["_id"]}, {"$set": update_fields})
     
     # Calculate totals
     subtotal = sum(item.cost for item in data.items)
