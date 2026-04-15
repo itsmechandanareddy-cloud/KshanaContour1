@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { 
   Phone, Mail, MapPin, Instagram, MessageCircle, 
   User, ShieldCheck, Star, Scissors, ArrowRight
 } from "lucide-react";
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/5x4gmkkq_image.png";
 const SKETCH_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/a4jq30f0_image.png";
@@ -14,6 +17,11 @@ const ABOUT_IMG = "https://customer-assets.emergentagent.com/job_869a086f-518b-4
 const LandingPage = () => {
   const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [reviews, setReviews] = useState([]);
+
+  useEffect(() => {
+    axios.get(`${API}/reviews`).then(r => setReviews(r.data)).catch(() => {});
+  }, []);
 
   const defaultGallery = [
     { id: 1, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/7lsyatwt_image.png", title: "Red Bridal Blouse" },
@@ -168,17 +176,54 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Reviews */}
-      <section className="border-t border-[#2D2420]/10">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24 text-center">
-          <a href="https://maps.app.goo.gl/3RAsjwkSV7S3FCCA8" target="_blank" rel="noopener noreferrer"
-            className="inline-flex flex-col items-center gap-4 group" data-testid="google-reviews-link">
-            <div className="flex gap-1">
-              {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 text-[#D19B5A] fill-[#D19B5A]" />)}
+      {/* Reviews / Testimonials */}
+      <section id="reviews" className="border-t border-[#2D2420]/10">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24">
+          <div className="text-center mb-16">
+            <p className="text-xs uppercase tracking-[0.3em] text-[#D19B5A] mb-4">Testimonials</p>
+            <h2 className="font-['Cormorant_Garamond'] text-4xl md:text-5xl font-light text-[#2D2420]">
+              What Our Clients Say
+            </h2>
+          </div>
+
+          {reviews.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {reviews.slice(0, 6).map((rev) => (
+                <div key={rev.id} className="bg-white border border-[#EFEBE4] p-8 space-y-4 hover:shadow-lg transition-shadow duration-300">
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <Star key={s} className={`w-4 h-4 ${s <= rev.rating ? "text-[#D19B5A] fill-[#D19B5A]" : "text-[#EFEBE4]"}`} />
+                    ))}
+                  </div>
+                  <p className="text-[#5C504A] text-sm leading-relaxed italic">"{rev.review_text}"</p>
+                  <div className="flex items-center gap-3 pt-2 border-t border-[#EFEBE4]">
+                    <div className="w-8 h-8 rounded-full bg-[#2D2420]/10 flex items-center justify-center">
+                      <span className="text-xs font-semibold text-[#2D2420]">{rev.reviewer_name?.charAt(0)?.toUpperCase()}</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[#2D2420]">{rev.reviewer_name}</p>
+                      {rev.source && <p className="text-[10px] uppercase tracking-wider text-[#8A7D76]">via {rev.source}</p>}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <p className="font-['Cormorant_Garamond'] text-2xl font-light text-[#2D2420]">Loved by our clients</p>
-            <p className="text-xs uppercase tracking-[0.2em] text-[#2D2420]/40 group-hover:text-[#D19B5A] transition-colors">View Google Reviews</p>
-          </a>
+          ) : (
+            <div className="text-center mb-12">
+              <div className="flex justify-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 text-[#D19B5A] fill-[#D19B5A]" />)}
+              </div>
+              <p className="font-['Cormorant_Garamond'] text-2xl font-light text-[#2D2420]">Loved by our clients</p>
+            </div>
+          )}
+
+          <div className="text-center">
+            <button onClick={() => window.open("https://maps.app.goo.gl/3RAsjwkSV7S3FCCA8", "_blank")}
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#2D2420]/40 hover:text-[#D19B5A] transition-colors"
+              data-testid="google-reviews-link">
+              <Star className="w-4 h-4" />View All Google Reviews
+            </button>
+          </div>
         </div>
       </section>
 

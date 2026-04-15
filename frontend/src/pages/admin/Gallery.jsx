@@ -116,15 +116,17 @@ const Gallery = () => {
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   onError={(e) => { e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect fill="%23F7F2EB" width="400" height="400"/><text x="50%" y="50%" text-anchor="middle" fill="%238A7D76" font-size="14">Image</text></svg>'; }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#2D2420]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                {/* Always-visible delete button */}
+                <Button size="icon" variant="destructive" onClick={() => handleDeleteItem(item.id)}
+                  className="absolute top-3 right-3 bg-[#2D2420]/60 hover:bg-[#B85450] rounded-full w-8 h-8 z-10"
+                  data-testid={`delete-gallery-${item.id}`}>
+                  <Trash2 className="w-4 h-4 text-white" />
+                </Button>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2D2420]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <p className="text-white font-medium truncate">{item.title}</p>
                     {item.category && <p className="text-white/70 text-sm">{item.category}</p>}
                   </div>
-                  <Button size="icon" variant="destructive" onClick={() => handleDeleteItem(item.id)}
-                    className="absolute top-4 right-4 bg-[#B85450]/90 hover:bg-[#B85450] rounded-full">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
                 </div>
               </div>
             ))}

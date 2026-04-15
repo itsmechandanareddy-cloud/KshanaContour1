@@ -291,6 +291,13 @@ class GalleryCreate(BaseModel):
     image_url: str
     category: Optional[str] = None
 
+class ReviewCreate(BaseModel):
+    reviewer_name: str
+    rating: int = 5  # 1-5
+    review_text: str
+    date: Optional[str] = None
+    source: Optional[str] = "google"  # google, instagram, direct
+
 # ============== AUTH ENDPOINTS ==============
 @api_router.post("/auth/admin/login")
 async def admin_login(data: AdminLogin, response: Response):
@@ -1025,6 +1032,61 @@ async def get_gallery_image(file_id: str):
     except Exception as e:
         logger.error(f"Gallery image fetch failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to load image")
+
+
+# ============== REVIEWS ENDPOINTS ==============
+@api_router.get("/reviews")
+async def get_reviews():
+    items = await db.reviews.find({}).sort("created_at", -1).to_list(100)
+    for item in items:
+        item["id"] = str(item.pop("_id"))
+    return items
+
+@api_router.post("/reviews")
+async def create_review(data: ReviewCreate, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    doc = data.model_dump()
+    doc["created_at"] = datetime.now(timezone.utc).isoformat()
+    result = await db.reviews.insert_one(doc)
+    return {"id": str(result.inserted_id), "message": "Review added"}
+
+@api_router.put("/reviews/{review_id}")
+async def update_review(review_id: str, data: ReviewCreate, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    update_data = data.model_dump()
+    result = await db.reviews.update_one({"_id": ObjectId(review_id)}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Review not found")
+    return {"message": "Review updated"}
+
+@api_router.delete("/reviews/{review_id}")
+async def delete_review(review_id: str, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    result = await db.reviews.delete_one({"_id": ObjectId(review_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Review not found")
+    return {"message": "Review deleted"}
+
+@api_router.get("/reviews/stats")
+async def get_review_stats():
+    reviews = await db.reviews.find({}).to_list(500)
+    total = len(reviews)
+    if total == 0:
+        return {"total": 0, "average": 0, "distribution": {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}}
+    distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for r in reviews:
+        rating = r.get("rating", 5)
+        if rating in distribution:
+            distribution[rating] += 1
+    average = round(sum(r.get("rating", 5) for r in reviews) / total, 1)
+    return {"total": total, "average": average, "distribution": distribution}
+
 
 # ============== WHATSAPP MESSAGE HELPER ==============
 @api_router.get("/orders/{order_id}/whatsapp-message")
