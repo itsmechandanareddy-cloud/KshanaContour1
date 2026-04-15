@@ -91,7 +91,6 @@ const OrderForm = () => {
     customer_email: "",
     customer_age: "",
     customer_gender: "",
-    customer_dob: "",
     delivery_date: "",
     description: "",
     tax_percentage: 18,
@@ -102,6 +101,8 @@ const OrderForm = () => {
   
   const [items, setItems] = useState([{ ...defaultItem }]);
   const [measurements, setMeasurements] = useState({ ...defaultMeasurements });
+  const [activeMeasurementTypes, setActiveMeasurementTypes] = useState([]);
+  const [selectedMeasurementType, setSelectedMeasurementType] = useState("");
   const [existingOrder, setExistingOrder] = useState(null);
   const [newPayment, setNewPayment] = useState({ amount: 0, date: "", mode: "cash", notes: "" });
   const [orderImages, setOrderImages] = useState([]);
@@ -128,7 +129,6 @@ const OrderForm = () => {
         customer_email: order.customer_email || "",
         customer_age: order.customer_age || "",
         customer_gender: order.customer_gender || "",
-        customer_dob: order.customer_dob || "",
         delivery_date: order.delivery_date?.split('T')[0] || "",
         description: order.description || "",
         tax_percentage: order.tax_percentage || 18,
@@ -137,7 +137,20 @@ const OrderForm = () => {
         advance_mode: "cash"
       });
       setItems(order.items?.length > 0 ? order.items : [{ ...defaultItem }]);
-      setMeasurements(order.measurements || defaultMeasurements);
+      const m = order.measurements || defaultMeasurements;
+      setMeasurements(m);
+      // Detect which measurement types have data
+      const types = [];
+      if (Object.keys(m).some(k => k.startsWith("blouse_") && m[k])) types.push("blouse");
+      if (Object.keys(m).some(k => k.startsWith("kurta_") && m[k])) types.push("kurta_top");
+      if (Object.keys(m).some(k => k.startsWith("lehenga_") && m[k])) types.push("lehenga");
+      if (Object.keys(m).some(k => k.startsWith("pant_") && m[k])) types.push("pant");
+      if (Object.keys(m).some(k => k.startsWith("kids_") && m[k])) types.push("kids");
+      if (Object.keys(m).some(k => k.startsWith("mens_shirt_") && m[k])) types.push("mens_shirt");
+      if (Object.keys(m).some(k => k.startsWith("mens_pant_") && m[k])) types.push("mens_pant");
+      // Legacy: if old fields have data
+      if (types.length === 0 && Object.keys(m).some(k => !k.includes("_") && m[k] && k !== "additional_notes")) types.push("blouse");
+      setActiveMeasurementTypes(types);
       setOrderImages(order.images || []);
     } catch (error) {
       toast.error("Failed to load order");
@@ -170,8 +183,7 @@ const OrderForm = () => {
       customer_phone: customer.phone || "",
       customer_email: customer.email || "",
       customer_age: customer.age || "",
-      customer_gender: customer.gender || "",
-      customer_dob: customer.dob || ""
+      customer_gender: customer.gender || ""
     }));
     setShowSuggestions(false);
     setCustomerSuggestions([]);
@@ -251,7 +263,7 @@ const OrderForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.customer_name || !formData.customer_phone || !formData.customer_dob || !formData.delivery_date) {
+    if (!formData.customer_name || !formData.customer_phone || !formData.delivery_date) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -283,7 +295,7 @@ const OrderForm = () => {
           customer_email: formData.customer_email,
           customer_age: formData.customer_age ? parseInt(formData.customer_age) : null,
           customer_gender: formData.customer_gender,
-          customer_dob: formData.customer_dob,
+          customer_dob: "",
           delivery_date: formData.delivery_date,
           items: items,
           measurements: measurements,
@@ -465,27 +477,6 @@ const OrderForm = () => {
                 )}
               </div>
               <div className="space-y-2">
-                <Label className="text-[#5C504A]">Date of Birth *</Label>
-                <Input
-                  type="date"
-                  value={formData.customer_dob}
-                  onChange={(e) => {
-                    handleInputChange("customer_dob", e.target.value);
-                    if (e.target.value) {
-                      const today = new Date();
-                      const birth = new Date(e.target.value);
-                      let age = today.getFullYear() - birth.getFullYear();
-                      const m = today.getMonth() - birth.getMonth();
-                      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-                      handleInputChange("customer_age", age > 0 ? age : "");
-                    }
-                  }}
-                  disabled={isEdit}
-                  className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-xl"
-                  data-testid="customer-dob-input"
-                />
-              </div>
-              <div className="space-y-2">
                 <Label className="text-[#5C504A]">Email</Label>
                 <Input
                   type="email"
@@ -500,8 +491,10 @@ const OrderForm = () => {
                 <Input
                   type="number"
                   value={formData.customer_age}
-                  readOnly
-                  className="bg-[#F7F2EB] border-transparent rounded-xl cursor-default"
+                  onChange={(e) => handleInputChange("customer_age", e.target.value)}
+                  disabled={isEdit}
+                  className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-xl"
+                  placeholder="Optional"
                 />
               </div>
               <div className="space-y-2">
@@ -771,22 +764,52 @@ const OrderForm = () => {
           </CardContent>
         </Card>
 
-        {/* Measurements — Blouse & Kurta Sections */}
+        {/* Measurements — Add by Type */}
         <Card className="bg-white border-[#EFEBE4]">
-          <CardHeader>
-            <CardTitle className="font-['Cormorant_Garamond'] text-xl text-[#2D2420]">
-              Measurements
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="font-['Cormorant_Garamond'] text-xl text-[#2D2420]">Measurements</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-8">
-
-            {/* ===== BLOUSE SECTION ===== */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 border-b border-[#2D2420]/10 pb-2">
-                <span className="text-xs uppercase tracking-[0.15em] font-semibold text-[#C05C3B]">Blouse</span>
+          <CardContent className="space-y-6">
+            {/* Add Measurement Type */}
+            <div className="flex gap-3 items-end">
+              <div className="flex-1 space-y-1">
+                <Label className="text-xs text-[#8A7D76]">Add Measurement Chart</Label>
+                <select value={selectedMeasurementType} onChange={(e) => setSelectedMeasurementType(e.target.value)}
+                  className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C05C3B]/20"
+                  data-testid="measurement-type-select">
+                  <option value="">Select type...</option>
+                  {[
+                    { value: "blouse", label: "Blouse" },
+                    { value: "kurta_top", label: "Kurta Top" },
+                    { value: "lehenga", label: "Lehenga" },
+                    { value: "pant", label: "Pant" },
+                    { value: "kids", label: "Kids" },
+                    { value: "mens_shirt", label: "Men's Shirt" },
+                    { value: "mens_pant", label: "Men's Pant" },
+                  ].filter(t => !activeMeasurementTypes.includes(t.value)).map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {[
+              <Button type="button" onClick={() => {
+                if (selectedMeasurementType && !activeMeasurementTypes.includes(selectedMeasurementType)) {
+                  setActiveMeasurementTypes([...activeMeasurementTypes, selectedMeasurementType]);
+                  setSelectedMeasurementType("");
+                }
+              }} disabled={!selectedMeasurementType}
+                className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white rounded-xl h-10 px-5" data-testid="add-measurement-btn">
+                <Plus className="w-4 h-4 mr-1" />Add
+              </Button>
+            </div>
+
+            {activeMeasurementTypes.length === 0 && (
+              <p className="text-center text-sm text-[#8A7D76] py-6">Select a measurement type above and click Add</p>
+            )}
+
+            {/* Render active measurement sections */}
+            {activeMeasurementTypes.map(type => {
+              const configs = {
+                blouse: { label: "Blouse", color: "#C05C3B", fields: [
                   { key: "blouse_length", label: "Length" }, { key: "blouse_shoulder", label: "Shoulder" },
                   { key: "blouse_cross_back", label: "Cross Back" }, { key: "blouse_back_deep_balance", label: "Back Deep / Balance" },
                   { key: "blouse_upper_chest", label: "Upper Chest" }, { key: "blouse_chest", label: "Chest" },
@@ -795,55 +818,8 @@ const OrderForm = () => {
                   { key: "blouse_sleeve_round", label: "Sleeve Round" }, { key: "blouse_point", label: "Point" },
                   { key: "blouse_bust_length", label: "Bust Length" }, { key: "blouse_front_shoulder", label: "Front Shoulder" },
                   { key: "blouse_cross_front", label: "Cross Front" }, { key: "blouse_front_deep", label: "Front Deep" },
-                ].map(({ key, label }) => (
-                  <div key={key} className="space-y-1">
-                    <Label className="text-xs text-[#8A7D76]">{label}</Label>
-                    <Input value={measurements[key] || ""} onChange={(e) => handleMeasurementChange(key, e.target.value)}
-                      className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-lg h-10" placeholder="—" data-testid={`measurement-${key}`} />
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-1">
-                  <Label className="text-xs text-[#8A7D76]">Front Neck</Label>
-                  <Input value={measurements.blouse_front_neck || ""} onChange={(e) => handleMeasurementChange("blouse_front_neck", e.target.value)}
-                    className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-lg h-10" placeholder="—" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-[#8A7D76]">Back Neck</Label>
-                  <Input value={measurements.blouse_back_neck || ""} onChange={(e) => handleMeasurementChange("blouse_back_neck", e.target.value)}
-                    className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-lg h-10" placeholder="—" />
-                </div>
-              </div>
-            </div>
-
-            {/* ===== LEHENGA SECTION ===== */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 border-b border-[#2D2420]/10 pb-2">
-                <span className="text-xs uppercase tracking-[0.15em] font-semibold text-[#D19B5A]">Lehenga</span>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {[
-                  { key: "lehenga_length", label: "Lehenga Length" },
-                  { key: "lehenga_waist", label: "Waist" },
-                  { key: "lehenga_hip", label: "Hip" },
-                ].map(({ key, label }) => (
-                  <div key={key} className="space-y-1">
-                    <Label className="text-xs text-[#8A7D76]">{label}</Label>
-                    <Input value={measurements[key] || ""} onChange={(e) => handleMeasurementChange(key, e.target.value)}
-                      className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-lg h-10" placeholder="—" data-testid={`measurement-${key}`} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ===== KURTA TOP SECTION ===== */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 border-b border-[#2D2420]/10 pb-2">
-                <span className="text-xs uppercase tracking-[0.15em] font-semibold text-[#7E8B76]">Kurta Top</span>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {[
+                ], neck: true, neckPrefix: "blouse" },
+                kurta_top: { label: "Kurta Top", color: "#7E8B76", fields: [
                   { key: "kurta_length", label: "Length" }, { key: "kurta_shoulder", label: "Shoulder" },
                   { key: "kurta_cross_back", label: "Cross Back" }, { key: "kurta_back_deep", label: "Back Deep" },
                   { key: "kurta_front_deep", label: "Front Deep" }, { key: "kurta_upper_chest", label: "Upper Chest" },
@@ -852,48 +828,72 @@ const OrderForm = () => {
                   { key: "kurta_sleeve_length", label: "Sleeve Length" }, { key: "kurta_sleeve_round", label: "Sleeve Round" },
                   { key: "kurta_bicep", label: "Bicep" }, { key: "kurta_cross_front", label: "Cross Front" },
                   { key: "kurta_front_shoulder", label: "Front Shoulder" },
-                ].map(({ key, label }) => (
-                  <div key={key} className="space-y-1">
-                    <Label className="text-xs text-[#8A7D76]">{label}</Label>
-                    <Input value={measurements[key] || ""} onChange={(e) => handleMeasurementChange(key, e.target.value)}
-                      className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-lg h-10" placeholder="—" data-testid={`measurement-${key}`} />
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-1">
-                  <Label className="text-xs text-[#8A7D76]">Front Neck</Label>
-                  <Input value={measurements.kurta_front_neck || ""} onChange={(e) => handleMeasurementChange("kurta_front_neck", e.target.value)}
-                    className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-lg h-10" placeholder="—" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-[#8A7D76]">Back Neck</Label>
-                  <Input value={measurements.kurta_back_neck || ""} onChange={(e) => handleMeasurementChange("kurta_back_neck", e.target.value)}
-                    className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-lg h-10" placeholder="—" />
-                </div>
-              </div>
-            </div>
-
-            {/* ===== PANT SECTION ===== */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 border-b border-[#2D2420]/10 pb-2">
-                <span className="text-xs uppercase tracking-[0.15em] font-semibold text-[#7A8B99]">Pant</span>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
+                ], neck: true, neckPrefix: "kurta" },
+                lehenga: { label: "Lehenga", color: "#D19B5A", fields: [
+                  { key: "lehenga_length", label: "Length" }, { key: "lehenga_waist", label: "Waist" }, { key: "lehenga_hip", label: "Hip" },
+                ] },
+                pant: { label: "Pant", color: "#7A8B99", fields: [
                   { key: "pant_length", label: "Length" }, { key: "pant_waist", label: "Waist" },
                   { key: "pant_hip_round", label: "Hip Round" }, { key: "pant_high_round", label: "High Round" },
                   { key: "pant_knee_round", label: "Knee Round" }, { key: "pant_bottom", label: "Bottom" },
                   { key: "pant_new_length", label: "New Length" },
-                ].map(({ key, label }) => (
-                  <div key={key} className="space-y-1">
-                    <Label className="text-xs text-[#8A7D76]">{label}</Label>
-                    <Input value={measurements[key] || ""} onChange={(e) => handleMeasurementChange(key, e.target.value)}
-                      className="bg-[#F7F2EB] border-transparent focus:border-[#C05C3B] rounded-lg h-10" placeholder="—" data-testid={`measurement-${key}`} />
+                ] },
+                kids: { label: "Kids", color: "#C05C3B", fields: [
+                  { key: "kids_length", label: "Length" }, { key: "kids_shoulder", label: "Shoulder" },
+                  { key: "kids_chest", label: "Chest" }, { key: "kids_waist", label: "Waist" },
+                  { key: "kids_hip", label: "Hip" }, { key: "kids_sleeve_length", label: "Sleeve Length" },
+                  { key: "kids_arm_round", label: "Arm Round" }, { key: "kids_neck_round", label: "Neck Round" },
+                  { key: "kids_back_length", label: "Back Length" }, { key: "kids_front_length", label: "Front Length" },
+                ] },
+                mens_shirt: { label: "Men's Shirt", color: "#2D2420", fields: [
+                  { key: "mens_shirt_length", label: "Length" }, { key: "mens_shirt_shoulder", label: "Shoulder" },
+                  { key: "mens_shirt_chest", label: "Chest" }, { key: "mens_shirt_waist", label: "Waist" },
+                  { key: "mens_shirt_sleeve_length", label: "Sleeve Length" }, { key: "mens_shirt_collar", label: "Collar" },
+                  { key: "mens_shirt_bicep", label: "Bicep" }, { key: "mens_shirt_cuff", label: "Cuff" },
+                  { key: "mens_shirt_cross_back", label: "Cross Back" }, { key: "mens_shirt_cross_front", label: "Cross Front" },
+                ] },
+                mens_pant: { label: "Men's Pant", color: "#5C504A", fields: [
+                  { key: "mens_pant_length", label: "Length" }, { key: "mens_pant_waist", label: "Waist" },
+                  { key: "mens_pant_hip", label: "Hip" }, { key: "mens_pant_thigh", label: "Thigh" },
+                  { key: "mens_pant_knee", label: "Knee" }, { key: "mens_pant_bottom", label: "Bottom" },
+                  { key: "mens_pant_inseam", label: "Inseam" }, { key: "mens_pant_crotch", label: "Crotch" },
+                ] },
+              };
+              const cfg = configs[type];
+              if (!cfg) return null;
+              return (
+                <div key={type} className="space-y-4 p-5 bg-[#F7F2EB]/50 rounded-xl border border-[#EFEBE4]">
+                  <div className="flex items-center justify-between border-b border-[#2D2420]/10 pb-2">
+                    <span className="text-xs uppercase tracking-[0.15em] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
+                    <button type="button" onClick={() => setActiveMeasurementTypes(activeMeasurementTypes.filter(t => t !== type))}
+                      className="text-xs text-[#B85450] hover:text-[#B85450]/80 uppercase tracking-wider">Remove</button>
                   </div>
-                ))}
-              </div>
-            </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {cfg.fields.map(({ key, label }) => (
+                      <div key={key} className="space-y-1">
+                        <Label className="text-[10px] text-[#8A7D76]">{label}</Label>
+                        <Input value={measurements[key] || ""} onChange={(e) => handleMeasurementChange(key, e.target.value)}
+                          className="bg-white border-[#EFEBE4] focus:border-[#C05C3B] rounded-lg h-9 text-sm" placeholder="—" data-testid={`measurement-${key}`} />
+                      </div>
+                    ))}
+                  </div>
+                  {cfg.neck && (
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-[#8A7D76]">Front Neck</Label>
+                        <Input value={measurements[`${cfg.neckPrefix}_front_neck`] || ""} onChange={(e) => handleMeasurementChange(`${cfg.neckPrefix}_front_neck`, e.target.value)}
+                          className="bg-white border-[#EFEBE4] focus:border-[#C05C3B] rounded-lg h-9 text-sm" placeholder="—" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-[#8A7D76]">Back Neck</Label>
+                        <Input value={measurements[`${cfg.neckPrefix}_back_neck`] || ""} onChange={(e) => handleMeasurementChange(`${cfg.neckPrefix}_back_neck`, e.target.value)}
+                          className="bg-white border-[#EFEBE4] focus:border-[#C05C3B] rounded-lg h-9 text-sm" placeholder="—" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             {/* Additional Notes */}
             <div className="space-y-2">
