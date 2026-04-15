@@ -284,19 +284,9 @@ const Materials = () => {
               </div>
               <div className="space-y-2">
                 <Label className="text-[#5C504A]">Unit</Label>
-                <Select 
-                  value={newMaterial.unit} 
-                  onValueChange={(value) => setNewMaterial({ ...newMaterial, unit: value })}
-                >
-                  <SelectTrigger className="bg-[#F7F2EB] border-transparent rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {UNITS.map((unit) => (
-                      <SelectItem key={unit} value={unit}>{unit}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select value={newMaterial.unit} onChange={(e) => setNewMaterial({ ...newMaterial, unit: e.target.value })} className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none">
+                  {UNITS.map((unit) => (<option key={unit} value={unit}>{unit}</option>))}
+                </select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -322,21 +312,9 @@ const Materials = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[#5C504A]">Payment Mode</Label>
-                <Select 
-                  value={newMaterial.payment_mode} 
-                  onValueChange={(value) => setNewMaterial({ ...newMaterial, payment_mode: value })}
-                >
-                  <SelectTrigger className="bg-[#F7F2EB] border-transparent rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAYMENT_MODES.map((mode) => (
-                      <SelectItem key={mode} value={mode}>
-                        {mode.charAt(0).toUpperCase() + mode.slice(1).replace('_', ' ')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select value={newMaterial.payment_mode} onChange={(e) => setNewMaterial({ ...newMaterial, payment_mode: e.target.value })} className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none">
+                  {PAYMENT_MODES.map((mode) => (<option key={mode} value={mode}>{mode.charAt(0).toUpperCase() + mode.slice(1).replace('_', ' ')}</option>))}
+                </select>
               </div>
               <div className="space-y-2">
                 <Label className="text-[#5C504A]">Supplier</Label>
@@ -359,6 +337,11 @@ const Materials = () => {
         </DialogContent>
       </Dialog>
     </AdminLayout>
+  );
+};
+
+export default Materials;
+AdminLayout>
   );
 };
 

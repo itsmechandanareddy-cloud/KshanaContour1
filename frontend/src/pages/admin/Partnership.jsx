@@ -267,10 +267,9 @@ const Partnership = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Paid To *</Label><Input value={form.paid_to} onChange={(e) => setForm({...form, paid_to: e.target.value})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
               <div className="space-y-2"><Label>Mode</Label>
-                <Select value={form.mode} onValueChange={(v) => setForm({...form, mode: v})}>
-                  <SelectTrigger className="bg-[#F7F2EB] border-transparent rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>{MODES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                </Select>
+                <select value={form.mode} onChange={(e) => setForm({...form, mode: e.target.value})} className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none">
+                  {MODES.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">

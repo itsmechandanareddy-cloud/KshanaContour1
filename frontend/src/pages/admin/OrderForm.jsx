@@ -520,19 +520,17 @@ const OrderForm = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="space-y-2 lg:col-span-2">
                     <Label className="text-[#5C504A]">Service Type *</Label>
-                    <Select 
-                      value={item.service_type || undefined} 
-                      onValueChange={(value) => handleItemChange(index, "service_type", value)}
+                    <select
+                      value={item.service_type || ""}
+                      onChange={(e) => handleItemChange(index, "service_type", e.target.value)}
+                      className="h-10 w-full px-3 text-sm bg-white border border-[#EFEBE4] rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C05C3B]/20"
+                      data-testid={`service-type-${index}`}
                     >
-                      <SelectTrigger className="bg-white border-[#EFEBE4] rounded-xl" data-testid={`service-type-${index}`}>
-                        <SelectValue placeholder="Select service" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SERVICE_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <option value="">Select service</option>
+                      {SERVICE_TYPES.map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[#5C504A]">Cost (₹) *</Label>
@@ -816,21 +814,15 @@ const OrderForm = () => {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[#5C504A]">Payment Mode</Label>
-                    <Select 
-                      value={formData.advance_mode} 
-                      onValueChange={(value) => handleInputChange("advance_mode", value)}
+                    <select
+                      value={formData.advance_mode}
+                      onChange={(e) => handleInputChange("advance_mode", e.target.value)}
+                      className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C05C3B]/20"
                     >
-                      <SelectTrigger className="bg-[#F7F2EB] border-transparent rounded-xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PAYMENT_MODES.map((mode) => (
-                          <SelectItem key={mode} value={mode}>
-                            {mode.charAt(0).toUpperCase() + mode.slice(1).replace('_', ' ')}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      {PAYMENT_MODES.map((mode) => (
+                        <option key={mode} value={mode}>{mode.charAt(0).toUpperCase() + mode.slice(1).replace('_', ' ')}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               )}
@@ -888,21 +880,15 @@ const OrderForm = () => {
             </div>
             <div className="space-y-2">
               <Label className="text-[#5C504A]">Mode</Label>
-              <Select 
-                value={newPayment.mode} 
-                onValueChange={(value) => setNewPayment({ ...newPayment, mode: value })}
+              <select
+                value={newPayment.mode}
+                onChange={(e) => setNewPayment({ ...newPayment, mode: e.target.value })}
+                className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C05C3B]/20"
               >
-                <SelectTrigger className="bg-[#F7F2EB] border-transparent rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAYMENT_MODES.map((mode) => (
-                    <SelectItem key={mode} value={mode}>
-                      {mode.charAt(0).toUpperCase() + mode.slice(1).replace('_', ' ')}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {PAYMENT_MODES.map((mode) => (
+                  <option key={mode} value={mode}>{mode.charAt(0).toUpperCase() + mode.slice(1).replace('_', ' ')}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-2">
               <Label className="text-[#5C504A]">Notes</Label>

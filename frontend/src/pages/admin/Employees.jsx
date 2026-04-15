@@ -254,14 +254,11 @@ const Employees = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[#5C504A]">Type *</Label>
-                <Select value={newEmployee.role} onValueChange={(v) => setNewEmployee({ ...newEmployee, role: v })}>
-                  <SelectTrigger className="bg-[#F7F2EB] border-transparent rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="master">Master (Weekly Pay)</SelectItem>
-                    <SelectItem value="tailor">Tailor</SelectItem>
-                    <SelectItem value="worker">Worker</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select value={newEmployee.role} onChange={(e) => setNewEmployee({ ...newEmployee, role: e.target.value })} className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C05C3B]/20">
+                  <option value="master">Master (Weekly Pay)</option>
+                  <option value="tailor">Tailor</option>
+                  <option value="worker">Worker</option>
+                </select>
               </div>
               <div className="space-y-2">
                 <Label className="text-[#5C504A]">Salary {newEmployee.role === "master" ? "(Weekly)" : "(Monthly)"}</Label>
@@ -298,10 +295,9 @@ const Employees = () => {
             <div className="space-y-2"><Label>Amount *</Label><Input type="number" value={newPayment.amount} onChange={(e) => setNewPayment({ ...newPayment, amount: parseFloat(e.target.value) || 0 })} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
             <div className="space-y-2"><Label>Date *</Label><Input type="date" value={newPayment.date} onChange={(e) => setNewPayment({ ...newPayment, date: e.target.value })} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
             <div className="space-y-2"><Label>Mode</Label>
-              <Select value={newPayment.mode} onValueChange={(v) => setNewPayment({ ...newPayment, mode: v })}>
-                <SelectTrigger className="bg-[#F7F2EB] border-transparent rounded-xl"><SelectValue /></SelectTrigger>
-                <SelectContent>{PAYMENT_MODES.map(m => <SelectItem key={m} value={m}>{m.replace("_", " ")}</SelectItem>)}</SelectContent>
-              </Select>
+              <select value={newPayment.mode} onChange={(e) => setNewPayment({ ...newPayment, mode: e.target.value })} className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none">
+                {PAYMENT_MODES.map(m => <option key={m} value={m}>{m.replace("_", " ")}</option>)}
+              </select>
             </div>
             <div className="space-y-2"><Label>Notes</Label><Input value={newPayment.notes} onChange={(e) => setNewPayment({ ...newPayment, notes: e.target.value })} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
           </div>
@@ -320,13 +316,11 @@ const Employees = () => {
             <div className="space-y-2"><Label>Date *</Label><Input type="date" value={newHours.date} onChange={(e) => setNewHours({ ...newHours, date: e.target.value })} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
             <div className="space-y-2"><Label>Hours *</Label><Input type="number" step="0.5" value={newHours.hours} onChange={(e) => setNewHours({ ...newHours, hours: parseFloat(e.target.value) || 0 })} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
             <div className="space-y-2"><Label>Order (optional)</Label>
-              <Select value={newHours.order_id || undefined} onValueChange={(v) => setNewHours({ ...newHours, order_id: v })}>
-                <SelectTrigger className="bg-[#F7F2EB] border-transparent rounded-xl"><SelectValue placeholder="Select order" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="general">General Work</SelectItem>
-                  {orders.map(o => <SelectItem key={o.order_id} value={o.order_id}>#{o.order_id} - {o.customer_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <select value={newHours.order_id || ""} onChange={(e) => setNewHours({ ...newHours, order_id: e.target.value })} className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none">
+                <option value="">Select order</option>
+                <option value="general">General Work</option>
+                {orders.map(o => <option key={o.order_id} value={o.order_id}>#{o.order_id} - {o.customer_name}</option>)}
+              </select>
             </div>
             <div className="space-y-2"><Label>Notes</Label><Input value={newHours.notes} onChange={(e) => setNewHours({ ...newHours, notes: e.target.value })} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
           </div>
@@ -343,23 +337,18 @@ const Employees = () => {
           <DialogHeader><DialogTitle className="font-['Cormorant_Garamond'] text-xl text-[#2D2420]">Assign Work - {selectedEmployee?.name}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2"><Label>Order *</Label>
-              <Select value={newWork.order_id || undefined} onValueChange={(v) => setNewWork({ ...newWork, order_id: v })}>
-                <SelectTrigger className="bg-[#F7F2EB] border-transparent rounded-xl"><SelectValue placeholder="Select order" /></SelectTrigger>
-                <SelectContent>
-                  {orders.map(o => <SelectItem key={o.order_id} value={o.order_id}>#{o.order_id} - {o.customer_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <select value={newWork.order_id || ""} onChange={(e) => setNewWork({ ...newWork, order_id: e.target.value })} className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none">
+                <option value="">Select order</option>
+                {orders.map(o => <option key={o.order_id} value={o.order_id}>#{o.order_id} - {o.customer_name}</option>)}
+              </select>
             </div>
             {newWork.order_id && (
               <div className="space-y-2"><Label>Item</Label>
-                <Select value={String(newWork.item_index)} onValueChange={(v) => setNewWork({ ...newWork, item_index: parseInt(v) })}>
-                  <SelectTrigger className="bg-[#F7F2EB] border-transparent rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {(orders.find(o => o.order_id === newWork.order_id)?.items || []).map((item, i) => (
-                      <SelectItem key={i} value={String(i)}>Item {i + 1}: {item.service_type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select value={String(newWork.item_index)} onChange={(e) => setNewWork({ ...newWork, item_index: parseInt(e.target.value) })} className="h-10 w-full px-3 text-sm bg-[#F7F2EB] border-transparent rounded-xl cursor-pointer focus:outline-none">
+                  {(orders.find(o => o.order_id === newWork.order_id)?.items || []).map((item, i) => (
+                    <option key={i} value={String(i)}>Item {i + 1}: {item.service_type}</option>
+                  ))}
+                </select>
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
