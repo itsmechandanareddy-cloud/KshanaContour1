@@ -203,18 +203,18 @@ const Orders = () => {
               data-testid="search-orders"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-48 bg-white border-[#EFEBE4] rounded-xl h-12" data-testid="status-filter">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="ready">Ready</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
-            </SelectContent>
-          </Select>
+          <select 
+            value={statusFilter} 
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full sm:w-48 h-12 px-4 bg-white border border-[#EFEBE4] rounded-xl text-sm text-[#5C504A] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C05C3B]/20"
+            data-testid="status-filter"
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="in_progress">In Progress</option>
+            <option value="ready">Ready</option>
+            <option value="delivered">Delivered</option>
+          </select>
         </div>
 
         {/* Orders List */}
@@ -317,20 +317,17 @@ const Orders = () => {
                           <Trash2 className="w-4 h-4" />
                         </Button>
                         {order.status !== "delivered" && (
-                          <Select 
-                            value={order.status} 
-                            onValueChange={(value) => updateOrderStatus(order.order_id, value)}
+                          <select 
+                            value={order.status}
+                            onChange={(e) => updateOrderStatus(order.order_id, e.target.value)}
+                            className="h-9 px-3 text-sm border border-[#EFEBE4] rounded-lg bg-white text-[#5C504A] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C05C3B]/20"
+                            data-testid={`update-status-${order.order_id}`}
                           >
-                            <SelectTrigger className="w-36 border-[#EFEBE4] rounded-lg" data-testid={`update-status-${order.order_id}`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="in_progress">In Progress</SelectItem>
-                              <SelectItem value="ready">Ready</SelectItem>
-                              <SelectItem value="delivered">Delivered</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="ready">Ready</option>
+                            <option value="delivered">Delivered</option>
+                          </select>
                         )}
                       </div>
                     </div>
