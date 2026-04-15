@@ -18,19 +18,39 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [reviews, setReviews] = useState([]);
+  const [gallery, setGallery] = useState([]);
+  const [slideIndex, setSlideIndex] = useState(0);
 
   useEffect(() => {
     axios.get(`${API}/reviews`).then(r => setReviews(r.data)).catch(() => {});
+    axios.get(`${API}/gallery`).then(r => {
+      const items = r.data.map(g => ({
+        id: g.id,
+        image_url: g.file_id ? `${API}/gallery/image/${g.file_id}` : g.image_url,
+        title: g.title
+      }));
+      setGallery(items);
+    }).catch(() => {});
   }, []);
 
-  const defaultGallery = [
-    { id: 1, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/7lsyatwt_image.png", title: "Red Bridal Blouse" },
-    { id: 2, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/wo33jc1d_WhatsApp%20Image%202026-04-14%20at%2012.30.24%20PM.jpeg", title: "Traditional Zari Work" },
-    { id: 3, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/3u4ltgp8_WhatsApp%20Image%202026-04-14%20at%2012.30.20%20PM%20%281%29.jpeg", title: "Floral Embroidery" },
-    { id: 4, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/l27qx3pj_WhatsApp%20Image%202026-04-14%20at%2012.30.20%20PM.jpeg", title: "Red Silk Blouse" },
-    { id: 5, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/6oa9xqr3_WhatsApp%20Image%202026-04-14%20at%2012.30.19%20PM.jpeg", title: "Purple Velvet Designer" },
-    { id: 6, image_url: "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/rxsg504q_WhatsApp%20Image%202026-04-14%20at%2012.30.19%20PM%20%281%29.jpeg", title: "Blue Zardozi Blouse" },
-  ];
+  // Auto-slide gallery every 15 seconds
+  useEffect(() => {
+    if (gallery.length <= 3) return;
+    const timer = setInterval(() => {
+      setSlideIndex(prev => (prev + 1) % gallery.length);
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [gallery.length]);
+
+  const getVisibleGallery = () => {
+    if (gallery.length === 0) return [];
+    if (gallery.length <= 3) return gallery;
+    const visible = [];
+    for (let i = 0; i < 3; i++) {
+      visible.push(gallery[(slideIndex + i) % gallery.length]);
+    }
+    return visible;
+  };
 
   const services = [
     "Bridal Blouses", "Traditional Blouses", "Contemporary Blouses",
@@ -151,7 +171,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Gallery */}
+      {/* Gallery — Rolling Carousel */}
       <section id="gallery" className="border-t border-[#2D2420]/10">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-24 lg:py-32">
           <div className="flex items-end justify-between mb-16">
@@ -159,20 +179,46 @@ const LandingPage = () => {
               <p className="text-xs uppercase tracking-[0.3em] text-[#D19B5A] mb-4">Portfolio</p>
               <h2 className="font-['Cormorant_Garamond'] text-4xl md:text-5xl font-light text-[#2D2420]">Our Work</h2>
             </div>
+            {gallery.length > 3 && (
+              <div className="flex gap-2">
+                <button onClick={() => setSlideIndex(prev => (prev - 1 + gallery.length) % gallery.length)}
+                  className="w-10 h-10 border border-[#2D2420]/15 flex items-center justify-center hover:border-[#2D2420] transition-colors">
+                  <ArrowRight className="w-4 h-4 rotate-180 text-[#2D2420]" />
+                </button>
+                <button onClick={() => setSlideIndex(prev => (prev + 1) % gallery.length)}
+                  className="w-10 h-10 border border-[#2D2420]/15 flex items-center justify-center hover:border-[#2D2420] transition-colors">
+                  <ArrowRight className="w-4 h-4 text-[#2D2420]" />
+                </button>
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {defaultGallery.map((item) => (
-              <div key={item.id} className="group relative aspect-[3/4] overflow-hidden">
-                <img src={item.image_url} alt={item.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-[#2D2420]/0 group-hover:bg-[#2D2420]/40 transition-all duration-500 flex items-end">
-                  <div className="p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                    <p className="text-[#FDFBF7] text-sm font-light tracking-wide">{item.title}</p>
+          {gallery.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3" data-testid="gallery-carousel">
+              {getVisibleGallery().map((item, idx) => (
+                <div key={`${item.id}-${slideIndex}-${idx}`} className="group relative aspect-[3/4] overflow-hidden animate-fade-in">
+                  <img src={item.image_url} alt={item.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-[#2D2420]/0 group-hover:bg-[#2D2420]/40 transition-all duration-500 flex items-end">
+                    <div className="p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                      <p className="text-[#FDFBF7] text-sm font-light tracking-wide">{item.title}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="text-[#8A7D76] text-sm">Gallery coming soon</p>
+            </div>
+          )}
+          {gallery.length > 3 && (
+            <div className="flex justify-center gap-1.5 mt-8">
+              {gallery.map((_, i) => (
+                <button key={i} onClick={() => setSlideIndex(i)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${i === slideIndex ? "bg-[#D19B5A] w-6" : "bg-[#2D2420]/15"}`} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
