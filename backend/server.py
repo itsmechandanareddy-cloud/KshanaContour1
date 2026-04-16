@@ -66,7 +66,12 @@ mongo_url = os.environ['MONGO_URL']
 # For MongoDB Atlas (cloud) - add SSL certificate support
 import certifi
 if "mongodb+srv" in mongo_url or "mongodb.net" in mongo_url:
-    client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
+    client = AsyncIOMotorClient(
+        mongo_url,
+        tls=True,
+        tlsCAFile=certifi.where(),
+        tlsAllowInvalidCertificates=True
+    )
 else:
     client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
