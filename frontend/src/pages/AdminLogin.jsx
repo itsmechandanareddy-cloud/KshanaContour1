@@ -7,7 +7,7 @@ import { Label } from "../components/ui/label";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/5x4gmkkq_image.png";
+const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/4m7v7k4y_image.png";
 
 const AdminLogin = () => {
   const [phone, setPhone] = useState("");

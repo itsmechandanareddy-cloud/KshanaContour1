@@ -10,7 +10,7 @@ import {
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/5x4gmkkq_image.png";
+const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/4m7v7k4y_image.png";
 const SKETCH_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/a4jq30f0_image.png";
 const ABOUT_IMG = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/sybd095l_image.png";
 
@@ -66,7 +66,7 @@ const LandingPage = () => {
       <nav className="fixed top-0 left-0 right-0 bg-[#FDFBF7]/90 backdrop-blur-sm z-50 border-b border-[#2D2420]/10">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-5 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src={LOGO_URL} alt="Kshana Contour" className="h-10 w-10 object-cover" />
+            <img src={LOGO_URL} alt="Kshana Contour" className="h-12 w-12 object-contain" />
             <span className="font-['Cormorant_Garamond'] text-xl font-light text-[#2D2420] hidden sm:block tracking-wide">Kshana Contour</span>
           </div>
           <div className="hidden md:flex items-center gap-10">

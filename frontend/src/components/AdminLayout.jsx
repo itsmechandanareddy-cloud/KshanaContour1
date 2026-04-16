@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/5x4gmkkq_image.png";
+const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/4m7v7k4y_image.png";
 
 const navItems = [
   { path: "/admin", icon: LayoutDashboard, label: "Dashboard", exact: true },
@@ -52,7 +52,7 @@ const AdminLayout = ({ children }) => {
           <div className="px-6 py-6 border-b border-white/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src={LOGO_URL} alt="Kshana" className="w-8 h-8 object-cover opacity-80" />
+                <img src={LOGO_URL} alt="Kshana" className="w-10 h-10 object-contain" />
                 <div>
                   <p className="font-['Cormorant_Garamond'] text-lg font-light text-[#FDFBF7] tracking-wide">Kshana</p>
                   <p className="text-[10px] uppercase tracking-[0.2em] text-[#D19B5A]">Admin</p>

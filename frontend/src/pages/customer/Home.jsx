@@ -8,7 +8,7 @@ import {
   Mail, Star, LogOut, ChevronRight, ArrowRight
 } from "lucide-react";
 
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/5x4gmkkq_image.png";
+const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/4m7v7k4y_image.png";
 
 const CustomerHome = () => {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ const CustomerHome = () => {
       <header className="border-b border-[#2D2420]/10">
         <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={LOGO_URL} alt="Kshana" className="w-8 h-8 object-cover" />
+            <img src={LOGO_URL} alt="Kshana" className="w-10 h-10 object-contain" />
             <span className="font-['Cormorant_Garamond'] text-lg font-light text-[#2D2420] tracking-wide">Kshana Contour</span>
           </div>
           <Button onClick={handleLogout} variant="ghost" className="text-[#2D2420]/40 hover:text-[#2D2420] rounded-none text-xs uppercase tracking-[0.1em]" data-testid="customer-logout">

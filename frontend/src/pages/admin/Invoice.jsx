@@ -5,7 +5,7 @@ import { API } from "../../App";
 import { Button } from "../../components/ui/button";
 import { ArrowLeft, Printer, MessageCircle } from "lucide-react";
 
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/5x4gmkkq_image.png";
+const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/4m7v7k4y_image.png";
 
 const Invoice = () => {
   const { orderId } = useParams();
@@ -135,7 +135,7 @@ const Invoice = () => {
           {/* Header */}
           <div className="flex items-start justify-between border-b-2 border-[#2D2420] pb-6 mb-6">
             <div className="flex items-center gap-4">
-              <img src={LOGO_URL} alt="Kshana Contour" className="w-16 h-16 rounded-lg object-cover" />
+              <img src={LOGO_URL} alt="Kshana Contour" className="w-16 h-16 rounded-lg object-contain" />
               <div>
                 <h1 className="text-2xl font-bold text-[#2D2420]" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                   Kshana Contour
