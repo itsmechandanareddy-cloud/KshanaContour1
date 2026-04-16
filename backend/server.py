@@ -81,6 +81,15 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 # Create the main app
 app = FastAPI(title="Kshana Contour Boutique API")
 
+# CORS middleware - MUST be added FIRST before routes
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
@@ -1750,15 +1759,6 @@ async def health_check():
 
 # Include the router in the main app
 app.include_router(api_router)
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # ============== STARTUP EVENT ==============
 @app.on_event("startup")
