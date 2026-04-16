@@ -168,7 +168,7 @@ const Employees = () => {
     // Return max to avoid double counting (since payment now auto-logs hours)
     return Math.max(logHours, payHours);
   };
-  const roleLabel = (r) => ({ master: "Master", tailor: "Tailor", worker: "Worker" }[r] || r);
+  const roleLabel = (r) => ({ master: "Master", tailor: "Tailor", worker: "Worker", manager: "Manager" }[r] || r);
   const roleBg = (r) => ({ master: "bg-[#D19B5A]/10 text-[#D19B5A]", tailor: "bg-[#C05C3B]/10 text-[#C05C3B]", worker: "bg-[#7A8B99]/10 text-[#7A8B99]" }[r] || "bg-[#F7F2EB] text-[#5C504A]");
 
   if (loading) return <AdminLayout><div className="flex items-center justify-center h-[60vh]"><div className="animate-spin rounded-full h-12 w-12 border-4 border-[#C05C3B] border-t-transparent"></div></div></AdminLayout>;
@@ -286,6 +286,7 @@ const Employees = () => {
                   <option value="master">Master</option>
                   <option value="tailor">Tailor</option>
                   <option value="worker">Worker</option>
+                  <option value="manager">Manager</option>
                 </select>
               </div>
               <div className="space-y-1.5">
