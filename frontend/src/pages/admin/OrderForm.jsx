@@ -44,7 +44,7 @@ const defaultItem = {
   front_neck_design: "",
   back_neck_design: "",
   additional_notes: "",
-  cost: 0
+  cost: ""
 };
 
 const defaultMeasurements = {
