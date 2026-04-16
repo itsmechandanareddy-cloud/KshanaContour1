@@ -1729,6 +1729,25 @@ async def delete_material(material_id: str, request: Request):
 async def root():
     return {"message": "Kshana Contour Boutique API"}
 
+@api_router.get("/health")
+async def health_check():
+    """Health check that also ensures admin is seeded"""
+    try:
+        admin_phone = os.environ.get("ADMIN_PHONE", "9876543210")
+        admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
+        existing = await db.admins.find_one({"phone": admin_phone})
+        if not existing:
+            await db.admins.insert_one({
+                "phone": admin_phone,
+                "password_hash": hash_password(admin_password),
+                "name": "Admin",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            return {"status": "ok", "admin_seeded": True}
+        return {"status": "ok", "admin_seeded": False}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
 # Include the router in the main app
 app.include_router(api_router)
 
