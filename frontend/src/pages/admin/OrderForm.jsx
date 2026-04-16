@@ -93,7 +93,7 @@ const OrderForm = () => {
     customer_gender: "",
     delivery_date: "",
     description: "",
-    tax_percentage: 18,
+    tax_percentage: 0,
     advance_amount: 0,
     advance_date: new Date().toISOString().split('T')[0],
     advance_mode: "cash"
