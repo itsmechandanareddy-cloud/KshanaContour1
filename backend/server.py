@@ -63,14 +63,17 @@ ROOT_DIR = Path(__file__).parent
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
-# For MongoDB Atlas (cloud) - add SSL certificate support
+# For MongoDB Atlas - handle SSL properly
 import certifi
+import ssl as ssl_module
 if "mongodb+srv" in mongo_url or "mongodb.net" in mongo_url:
     client = AsyncIOMotorClient(
         mongo_url,
         tls=True,
         tlsCAFile=certifi.where(),
-        tlsAllowInvalidCertificates=True
+        tlsAllowInvalidCertificates=True,
+        serverSelectionTimeoutMS=10000,
+        connectTimeoutMS=10000,
     )
 else:
     client = AsyncIOMotorClient(mongo_url)
@@ -1747,32 +1750,31 @@ app.add_middleware(
 # ============== STARTUP EVENT ==============
 @app.on_event("startup")
 async def startup_event():
-    # Create indexes
-    await db.customers.create_index("phone", unique=True)
-    await db.admins.create_index("phone", unique=True)
-    await db.orders.create_index("order_id", unique=True)
-    await db.orders.create_index("customer_id")
+    # Create indexes - wrapped in try/except so app starts even if DB is slow
+    try:
+        await db.customers.create_index("phone", unique=True)
+        await db.admins.create_index("phone", unique=True)
+        await db.orders.create_index("order_id", unique=True)
+        await db.orders.create_index("customer_id")
+    except Exception as e:
+        logger.warning(f"Index creation deferred: {e}")
     
     # Seed admin if not exists
-    admin_phone = os.environ.get("ADMIN_PHONE", "9876543210")
-    admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
-    
-    existing_admin = await db.admins.find_one({"phone": admin_phone})
-    if not existing_admin:
-        await db.admins.insert_one({
-            "phone": admin_phone,
-            "password_hash": hash_password(admin_password),
-            "name": "Admin",
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
-        logger.info(f"Admin seeded with phone: {admin_phone}")
-    
-    # Write test credentials
-    os.makedirs("/app/memory", exist_ok=True)
-    with open("/app/memory/test_credentials.md", "w") as f:
-        f.write(f"# Test Credentials\n\n")
-        f.write(f"## Admin\n- Phone: {admin_phone}\n- Password: {admin_password}\n- Role: admin\n\n")
-        f.write(f"## Auth Endpoints\n- Admin Login: POST /api/auth/admin/login\n- Customer Login: POST /api/auth/customer/login\n- Me: GET /api/auth/me\n- Logout: POST /api/auth/logout\n")
+    try:
+        admin_phone = os.environ.get("ADMIN_PHONE", "9876543210")
+        admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
+        
+        existing_admin = await db.admins.find_one({"phone": admin_phone})
+        if not existing_admin:
+            await db.admins.insert_one({
+                "phone": admin_phone,
+                "password_hash": hash_password(admin_password),
+                "name": "Admin",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            logger.info(f"Admin seeded with phone: {admin_phone}")
+    except Exception as e:
+        logger.warning(f"Admin seeding deferred: {e}")
     
     logger.info("Kshana Contour API started successfully")
 
