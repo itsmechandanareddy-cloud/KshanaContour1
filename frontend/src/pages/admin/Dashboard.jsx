@@ -9,10 +9,12 @@ import {
   Plus, ShoppingBag, Calendar, IndianRupee, Clock,
   AlertTriangle, TrendingUp, Package, Users, Star,
   Scissors, Image as ImageIcon, FileText, BarChart3,
-  ArrowRight, Eye, Printer, Handshake
+  ArrowRight, Eye, Printer, Handshake, Download
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -22,8 +24,140 @@ const Dashboard = () => {
   const [reviewStats, setReviewStats] = useState({ total: 0, average: 0, distribution: {} });
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState("");
 
   useEffect(() => { fetchAll(); }, []);
+
+  const fetchExportData = async () => {
+    const token = localStorage.getItem("token");
+    const res = await axios.get(`${API}/export/all-data`, { headers: { Authorization: `Bearer ${token}` } });
+    return res.data;
+  };
+
+  const saveExcel = (sheets, filename) => {
+    const wb = XLSX.utils.book_new();
+    sheets.forEach(({ name, data }) => {
+      const ws = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb, ws, name.substring(0, 31));
+    });
+    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([buf], { type: "application/octet-stream" }), filename);
+  };
+
+  const exportOrders = async (filterStatus) => {
+    setExporting("orders");
+    try {
+      const { orders } = await fetchExportData();
+      let filtered = orders;
+      if (filterStatus) filtered = orders.filter(o => o.status === filterStatus);
+      const rows = filtered.map(o => ({
+        "Order ID": o.order_id, "Customer": o.customer_name, "Phone": o.customer_phone,
+        "Status": o.status, "Items": o.items?.length || 0,
+        "Subtotal": o.subtotal || 0, "Tax %": o.tax_percentage || 0, "Total": o.total || 0,
+        "Paid": (o.payments || []).reduce((s, p) => s + (p.amount || 0), 0),
+        "Balance": o.balance || 0, "Order Date": o.created_at?.split("T")[0] || "",
+        "Delivery Date": o.delivery_date?.split("T")[0] || "", "Description": o.description || ""
+      }));
+      saveExcel([{ name: "Orders", data: rows }], `Kshana_Orders_${filterStatus || "All"}_${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast.success(`${rows.length} orders exported`);
+    } catch { toast.error("Export failed"); }
+    finally { setExporting(""); }
+  };
+
+  const exportEmployees = async () => {
+    setExporting("employees");
+    try {
+      const { employees: emps } = await fetchExportData();
+      const empRows = emps.map(e => ({
+        "Name": e.name, "Role": e.role, "Phone": e.phone,
+        "Pay Type": e.pay_type || "", "Salary": e.salary || 0,
+        "Total Payments": (e.payments || []).reduce((s, p) => s + (p.amount || 0), 0),
+        "Total Hours": (e.payments || []).reduce((s, p) => s + (p.hours || 0), 0)
+      }));
+      const payRows = [];
+      emps.forEach(e => {
+        (e.payments || []).forEach(p => {
+          payRows.push({
+            "Employee": e.name, "Role": e.role, "Amount": p.amount || 0,
+            "Hours": p.hours || 0, "Date": p.date || "", "Mode": p.mode || "",
+            "Order ID": p.order_id || "", "Item": p.item_index != null ? `Item ${p.item_index + 1}` : "",
+            "Notes": p.notes || ""
+          });
+        });
+      });
+      saveExcel([
+        { name: "Employees", data: empRows },
+        { name: "Employee Payments", data: payRows }
+      ], `Kshana_Employees_${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast.success("Employees exported");
+    } catch { toast.error("Export failed"); }
+    finally { setExporting(""); }
+  };
+
+  const exportPartnership = async () => {
+    setExporting("partnership");
+    try {
+      const { partnership } = await fetchExportData();
+      const rows = partnership.map(e => ({
+        "Date": e.date || "", "Reason": e.reason || "", "Paid To": e.paid_to || "",
+        "Chandana Invested": e.chandana || 0, "Akanksha Invested": e.akanksha || 0,
+        "SBI Account Paid": e.sbi || 0, "Mode": e.mode || "", "UPI ID": e.upi_id || "",
+        "Comments": e.comments || ""
+      }));
+      saveExcel([{ name: "Partnership", data: rows }], `Kshana_Partnership_${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast.success("Partnership exported");
+    } catch { toast.error("Export failed"); }
+    finally { setExporting(""); }
+  };
+
+  const exportIncomingPayments = async () => {
+    setExporting("incoming");
+    try {
+      const { orders } = await fetchExportData();
+      const rows = [];
+      orders.forEach(o => {
+        (o.payments || []).forEach(p => {
+          rows.push({
+            "Order ID": o.order_id, "Customer": o.customer_name, "Phone": o.customer_phone,
+            "Amount": p.amount || 0, "Date": p.date || "", "Mode": p.mode || "",
+            "Notes": p.notes || ""
+          });
+        });
+      });
+      rows.sort((a, b) => (b.Date || "").localeCompare(a.Date || ""));
+      saveExcel([{ name: "Incoming Payments", data: rows }], `Kshana_Incoming_Payments_${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast.success(`${rows.length} incoming payments exported`);
+    } catch { toast.error("Export failed"); }
+    finally { setExporting(""); }
+  };
+
+  const exportOutgoingPayments = async () => {
+    setExporting("outgoing");
+    try {
+      const { employees: emps, materials } = await fetchExportData();
+      const rows = [];
+      emps.forEach(e => {
+        (e.payments || []).forEach(p => {
+          rows.push({
+            "Type": "Employee Payment", "To": e.name, "Reason": `${e.role} - ${p.notes || "Payment"}`,
+            "Order ID": p.order_id || "", "Amount": p.amount || 0,
+            "Date": p.date || "", "Mode": p.mode || ""
+          });
+        });
+      });
+      materials.forEach(m => {
+        rows.push({
+          "Type": "Material Purchase", "To": m.supplier || m.name,
+          "Reason": m.name, "Order ID": "", "Amount": m.cost || 0,
+          "Date": m.purchase_date || "", "Mode": m.payment_mode || ""
+        });
+      });
+      rows.sort((a, b) => (b.Date || "").localeCompare(a.Date || ""));
+      saveExcel([{ name: "Outgoing Payments", data: rows }], `Kshana_Outgoing_Payments_${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast.success(`${rows.length} outgoing payments exported`);
+    } catch { toast.error("Export failed"); }
+    finally { setExporting(""); }
+  };
 
   const fetchAll = async () => {
     try {
@@ -281,6 +415,67 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+        {/* Export Center */}
+        <Card className="bg-white border-[#EFEBE4]">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <Download className="w-5 h-5 text-[#D19B5A]" />
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#8A7D76] font-semibold">Export Center</p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {/* Orders */}
+              <div className="p-4 bg-[#F7F2EB] space-y-3">
+                <p className="text-xs uppercase tracking-[0.1em] text-[#2D2420] font-semibold">Orders</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={() => exportOrders(null)} disabled={exporting === "orders"}
+                    className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white text-[10px] uppercase tracking-wider h-8 rounded-none" data-testid="export-all-orders">
+                    {exporting === "orders" ? "..." : "All Orders"}
+                  </Button>
+                  {["pending", "in_progress", "ready", "delivered"].map(s => (
+                    <Button key={s} size="sm" variant="outline" onClick={() => exportOrders(s)} disabled={!!exporting}
+                      className="text-[10px] uppercase tracking-wider h-8 rounded-none border-[#2D2420]/15 hover:bg-[#2D2420] hover:text-white">
+                      {s.replace("_", " ")}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              {/* Employees */}
+              <div className="p-4 bg-[#F7F2EB] space-y-3">
+                <p className="text-xs uppercase tracking-[0.1em] text-[#2D2420] font-semibold">Employees</p>
+                <Button size="sm" onClick={exportEmployees} disabled={exporting === "employees"}
+                  className="bg-[#2D2420] hover:bg-[#2D2420]/80 text-white text-[10px] uppercase tracking-wider h-8 rounded-none w-full" data-testid="export-employees">
+                  {exporting === "employees" ? "..." : "Employees + Payments"}
+                </Button>
+              </div>
+              {/* Partnership */}
+              <div className="p-4 bg-[#F7F2EB] space-y-3">
+                <p className="text-xs uppercase tracking-[0.1em] text-[#2D2420] font-semibold">Partnership</p>
+                <Button size="sm" onClick={exportPartnership} disabled={exporting === "partnership"}
+                  className="bg-[#D19B5A] hover:bg-[#C08A4A] text-[#2D2420] text-[10px] uppercase tracking-wider h-8 rounded-none w-full" data-testid="export-partnership">
+                  {exporting === "partnership" ? "..." : "Chandana & Akanksha"}
+                </Button>
+              </div>
+              {/* Incoming */}
+              <div className="p-4 bg-[#7E8B76]/10 space-y-3">
+                <p className="text-xs uppercase tracking-[0.1em] text-[#7E8B76] font-semibold">Incoming Payments</p>
+                <p className="text-[10px] text-[#8A7D76]">Customer payments with order ID, date, amount, mode</p>
+                <Button size="sm" onClick={exportIncomingPayments} disabled={exporting === "incoming"}
+                  className="bg-[#7E8B76] hover:bg-[#6E7B66] text-white text-[10px] uppercase tracking-wider h-8 rounded-none w-full" data-testid="export-incoming">
+                  {exporting === "incoming" ? "..." : "Export Incoming"}
+                </Button>
+              </div>
+              {/* Outgoing */}
+              <div className="p-4 bg-[#C05C3B]/10 space-y-3">
+                <p className="text-xs uppercase tracking-[0.1em] text-[#C05C3B] font-semibold">Outgoing Payments</p>
+                <p className="text-[10px] text-[#8A7D76]">Employee payments + material purchases with reason, date, mode</p>
+                <Button size="sm" onClick={exportOutgoingPayments} disabled={exporting === "outgoing"}
+                  className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white text-[10px] uppercase tracking-wider h-8 rounded-none w-full" data-testid="export-outgoing">
+                  {exporting === "outgoing" ? "..." : "Export Outgoing"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
   );

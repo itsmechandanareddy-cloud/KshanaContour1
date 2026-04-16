@@ -1443,6 +1443,29 @@ async def get_financial_summary(request: Request):
         }
     }
 
+@api_router.get("/export/all-data")
+async def export_all_data(request: Request):
+    """Export all data for Excel downloads"""
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    all_orders = await db.orders.find({}, {"_id": 0}).sort("order_id", 1).to_list(5000)
+    all_employees = await db.employees.find({}).to_list(500)
+    for e in all_employees:
+        e["id"] = str(e.pop("_id"))
+    all_materials = await db.materials.find({}, {"_id": 0}).to_list(5000)
+    all_partnership = await db.partnership.find({}, {"_id": 0}).to_list(5000)
+    
+    return {
+        "orders": all_orders,
+        "employees": all_employees,
+        "materials": all_materials,
+        "partnership": all_partnership
+    }
+
+
+
 # ============== PARTNERSHIP ENDPOINTS ==============
 @api_router.get("/reports/partnership")
 async def get_partnership_report(request: Request):
