@@ -560,7 +560,7 @@ const Employees = () => {
                               <span className="font-medium text-[#2D2420] text-sm">{p.date}</span>
                               <div className="text-xs text-[#8A7D76] mt-1">
                                 <span className="capitalize px-1.5 py-0.5 bg-[#F7F2EB] rounded">{p.mode?.replace("_", " ")}</span>
-                                {p.notes && <span className="ml-2 italic">{p.notes}</span>}
+                                {p.notes && <span className="ml-2 italic" dangerouslySetInnerHTML={{__html: p.notes.replace(/(KSH-\d+)/g, '<a href="/admin/orders/$1" style="color:#C05C3B;text-decoration:underline;font-weight:600;font-style:normal" onclick="event.stopPropagation()">$1</a>')}} />}
                               </div>
                             </div>
                             <span className="font-semibold text-[#7E8B76] text-sm">{fmt(p.amount)}</span>
@@ -583,9 +583,8 @@ const Employees = () => {
                               <span className="font-medium text-[#2D2420] text-sm">{p.date}</span>
                               <div className="flex flex-wrap items-center gap-2 text-xs text-[#8A7D76] mt-1">
                                 <span className="capitalize px-1.5 py-0.5 bg-[#F7F2EB] rounded">{p.mode?.replace("_", " ")}</span>
-                                {p.order_id && <span className="px-1.5 py-0.5 bg-[#C05C3B]/10 text-[#C05C3B] rounded">Order #{p.order_id}{p.item_index !== undefined && p.item_index !== null ? ` · Item ${p.item_index + 1}` : ""}</span>}
                                 {p.hours > 0 && <span className="px-1.5 py-0.5 bg-[#7A8B99]/10 text-[#7A8B99] rounded">{p.hours} hrs</span>}
-                                {p.notes && <span className="italic">{p.notes}</span>}
+                                {p.notes && <span className="italic" dangerouslySetInnerHTML={{__html: p.notes.replace(/(KSH-\d+)/g, '<a href="/admin/orders/$1" style="color:#C05C3B;text-decoration:underline;font-weight:600;font-style:normal" onclick="event.stopPropagation()">$1</a>')}} />}
                               </div>
                             </div>
                             <span className="font-semibold text-[#7E8B76] text-sm">{fmt(p.amount)}</span>
