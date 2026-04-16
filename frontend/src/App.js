@@ -18,6 +18,7 @@ import AdminReviewsContact from "./pages/admin/ReviewsContact";
 import AdminInvoice from "./pages/admin/Invoice";
 import AdminPartnership from "./pages/admin/Partnership";
 import AdminCustomers from "./pages/admin/Customers";
+import AdminSettings from "./pages/admin/Settings";
 import CustomerHome from "./pages/customer/Home";
 import CustomerOrders from "./pages/customer/MyOrders";
 import CustomerOrderDetail from "./pages/customer/OrderDetail";
@@ -254,6 +255,14 @@ function App() {
             element={
               <ProtectedRoute role="admin">
                 <AdminCustomers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute role="admin">
+                <AdminSettings />
               </ProtectedRoute>
             }
           />

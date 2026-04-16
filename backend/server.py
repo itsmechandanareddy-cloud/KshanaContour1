@@ -309,6 +309,12 @@ class ReviewCreate(BaseModel):
     date: Optional[str] = None
     source: Optional[str] = "google"  # google, instagram, direct
 
+
+class AdminUpdateCredentials(BaseModel):
+    current_password: str
+    new_phone: Optional[str] = None
+    new_password: Optional[str] = None
+
 # ============== AUTH ENDPOINTS ==============
 @api_router.post("/auth/admin/login")
 async def admin_login(data: AdminLogin, response: Response):
@@ -328,6 +334,26 @@ async def admin_login(data: AdminLogin, response: Response):
         "role": "admin",
         "token": token
     }
+
+
+@api_router.put("/auth/admin/update-credentials")
+async def update_admin_credentials(data: AdminUpdateCredentials, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    admin = await db.admins.find_one({"_id": ObjectId(user["_id"])})
+    if not admin or not verify_password(data.current_password, admin["password_hash"]):
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+    update = {}
+    if data.new_phone:
+        update["phone"] = data.new_phone
+    if data.new_password:
+        update["password_hash"] = hash_password(data.new_password)
+    if not update:
+        raise HTTPException(status_code=400, detail="No changes provided")
+    await db.admins.update_one({"_id": admin["_id"]}, {"$set": update})
+    return {"message": "Credentials updated successfully"}
+
 
 @api_router.post("/auth/customer/login")
 async def customer_login(data: CustomerLogin, response: Response):
