@@ -63,18 +63,12 @@ ROOT_DIR = Path(__file__).parent
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
-# For MongoDB Atlas - handle SSL properly
+# Append TLS params directly to connection string for Atlas
 import certifi
-import ssl as ssl_module
-if "mongodb+srv" in mongo_url or "mongodb.net" in mongo_url:
-    client = AsyncIOMotorClient(
-        mongo_url,
-        tls=True,
-        tlsCAFile=certifi.where(),
-        tlsAllowInvalidCertificates=True,
-        serverSelectionTimeoutMS=10000,
-        connectTimeoutMS=10000,
-    )
+if ("mongodb+srv" in mongo_url or "mongodb.net" in mongo_url):
+    sep = "&" if "?" in mongo_url else "?"
+    mongo_url_with_tls = f"{mongo_url}{sep}tls=true&tlsInsecure=true"
+    client = AsyncIOMotorClient(mongo_url_with_tls, tlsCAFile=certifi.where())
 else:
     client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
