@@ -5,7 +5,7 @@ import axios from "axios";
 import { Button } from "../../components/ui/button";
 import { 
   ShoppingBag, MessageCircle, Instagram, MapPin, Phone, 
-  Mail, Star, LogOut, ChevronRight, ArrowRight
+  Mail, Star, LogOut, ArrowRight
 } from "lucide-react";
 
 const LOGO_URL = "https://customer-assets.emergentagent.com/job_869a086f-518b-43e3-a2ba-4fade532d0ef/artifacts/4m7v7k4y_image.png";
@@ -14,21 +14,36 @@ const CustomerHome = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [gallery, setGallery] = useState([]);
+  const [slideIndex, setSlideIndex] = useState(0);
 
-  const defaultGallery = [
-    { id: 1, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/7lsyatwt_image.png", title: "Red Bridal Blouse" },
-    { id: 2, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/wo33jc1d_WhatsApp%20Image%202026-04-14%20at%2012.30.24%20PM.jpeg", title: "Traditional Zari Work" },
-    { id: 3, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/3u4ltgp8_WhatsApp%20Image%202026-04-14%20at%2012.30.20%20PM%20%281%29.jpeg", title: "Floral Embroidery" },
-    { id: 4, image_url: "https://customer-assets.emergentagent.com/job_kshana-contour/artifacts/6oa9xqr3_WhatsApp%20Image%202026-04-14%20at%2012.30.19%20PM.jpeg", title: "Purple Velvet Designer" },
-  ];
+  useEffect(() => {
+    axios.get(`${API}/gallery`).then(r => {
+      const items = r.data.map(g => ({
+        id: g.id,
+        image_url: g.file_id ? `${API}/gallery/image/${g.file_id}` : g.image_url,
+        title: g.title
+      }));
+      setGallery(items);
+    }).catch(() => {});
+  }, []);
 
-  useEffect(() => { fetchGallery(); }, []);
+  // Auto-slide every 15 seconds
+  useEffect(() => {
+    if (gallery.length <= 3) return;
+    const timer = setInterval(() => {
+      setSlideIndex(prev => (prev + 1) % gallery.length);
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [gallery.length]);
 
-  const fetchGallery = async () => {
-    try {
-      const r = await axios.get(`${API}/gallery`);
-      setGallery(r.data.length > 0 ? r.data : defaultGallery);
-    } catch { setGallery(defaultGallery); }
+  const getVisibleGallery = () => {
+    if (gallery.length === 0) return [];
+    if (gallery.length <= 3) return gallery;
+    const visible = [];
+    for (let i = 0; i < 3; i++) {
+      visible.push(gallery[(slideIndex + i) % gallery.length]);
+    }
+    return visible;
   };
 
   const handleLogout = async () => { await logout(); navigate("/"); };
@@ -86,19 +101,55 @@ const CustomerHome = () => {
           </a>
         </div>
 
-        {/* Gallery */}
+        {/* Gallery — Rolling Carousel */}
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-[#D19B5A] mb-4">Our Work</p>
-          <h2 className="font-['Cormorant_Garamond'] text-3xl font-light text-[#2D2420] mb-8">Gallery</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {gallery.slice(0, 8).map((item) => (
-              <div key={item.id} className="group relative aspect-square overflow-hidden">
-                <img src={item.image_url || item.url} alt={item.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-[#2D2420]/0 group-hover:bg-[#2D2420]/30 transition-all duration-500" />
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-[#D19B5A] mb-4">Our Work</p>
+              <h2 className="font-['Cormorant_Garamond'] text-3xl font-light text-[#2D2420]">Gallery</h2>
+            </div>
+            {gallery.length > 3 && (
+              <div className="flex gap-2">
+                <button onClick={() => setSlideIndex(prev => (prev - 1 + gallery.length) % gallery.length)}
+                  className="w-9 h-9 border border-[#2D2420]/15 flex items-center justify-center hover:border-[#2D2420] transition-colors">
+                  <ArrowRight className="w-4 h-4 rotate-180 text-[#2D2420]" />
+                </button>
+                <button onClick={() => setSlideIndex(prev => (prev + 1) % gallery.length)}
+                  className="w-9 h-9 border border-[#2D2420]/15 flex items-center justify-center hover:border-[#2D2420] transition-colors">
+                  <ArrowRight className="w-4 h-4 text-[#2D2420]" />
+                </button>
               </div>
-            ))}
+            )}
           </div>
+          {gallery.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {getVisibleGallery().map((item, idx) => (
+                  <div key={`${item.id}-${slideIndex}-${idx}`} className="group relative aspect-[3/4] overflow-hidden animate-fade-in">
+                    <img src={item.image_url} alt={item.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-[#2D2420]/0 group-hover:bg-[#2D2420]/40 transition-all duration-500 flex items-end">
+                      <div className="p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                        <p className="text-[#FDFBF7] text-sm font-light tracking-wide">{item.title}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {gallery.length > 3 && (
+                <div className="flex justify-center gap-1.5 mt-6">
+                  {gallery.map((_, i) => (
+                    <button key={i} onClick={() => setSlideIndex(i)}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${i === slideIndex ? "bg-[#D19B5A] w-6" : "bg-[#2D2420]/15"}`} />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-[#8A7D76] text-sm">Gallery coming soon</p>
+            </div>
+          )}
         </div>
 
         {/* Contact & Links */}
@@ -123,10 +174,10 @@ const CustomerHome = () => {
 
         {/* Reviews */}
         <div className="text-center py-8">
-          <a href="https://maps.app.goo.gl/3RAsjwkSV7S3FCCA8" target="_blank" rel="noopener noreferrer" className="inline-flex flex-col items-center gap-3 group">
+          <button onClick={() => window.open("https://maps.app.goo.gl/3RAsjwkSV7S3FCCA8", "_blank")} className="inline-flex flex-col items-center gap-3 group">
             <div className="flex gap-1">{[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-[#D19B5A] fill-[#D19B5A]" />)}</div>
             <p className="text-xs uppercase tracking-[0.15em] text-[#2D2420]/40 group-hover:text-[#D19B5A] transition-colors">View Google Reviews</p>
-          </a>
+          </button>
         </div>
       </div>
 
