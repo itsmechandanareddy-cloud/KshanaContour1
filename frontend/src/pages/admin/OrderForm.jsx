@@ -104,7 +104,7 @@ const OrderForm = () => {
   const [activeMeasurementTypes, setActiveMeasurementTypes] = useState([]);
   const [selectedMeasurementType, setSelectedMeasurementType] = useState("");
   const [existingOrder, setExistingOrder] = useState(null);
-  const [newPayment, setNewPayment] = useState({ amount: 0, date: "", mode: "cash", notes: "" });
+  const [newPayment, setNewPayment] = useState({ amount: "", date: "", mode: "cash", notes: "" });
   const [orderImages, setOrderImages] = useState([]);
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -334,7 +334,7 @@ const OrderForm = () => {
       });
       toast.success("Payment recorded");
       setShowPaymentModal(false);
-      setNewPayment({ amount: 0, date: "", mode: "cash", notes: "" });
+      setNewPayment({ amount: "", date: "", mode: "cash", notes: "" });
       fetchOrder();
     } catch (error) {
       toast.error("Failed to record payment");
