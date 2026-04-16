@@ -392,28 +392,6 @@ const OrderForm = () => {
                 Invoice
               </Button>
             )}
-            {!isEdit && (
-              <Button
-                type="submit"
-                disabled={saving}
-                onClick={() => setGenerateInvoice(true)}
-                className="bg-[#2D2420] hover:bg-[#2D2420]/90 text-[#FDFBF7] rounded-full px-6"
-                data-testid="save-and-invoice-button"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                {saving ? "Saving..." : "Save & Invoice"}
-              </Button>
-            )}
-            <Button
-              type="submit"
-              disabled={saving}
-              onClick={() => setGenerateInvoice(false)}
-              className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white rounded-full px-6"
-              data-testid="save-order-button"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {saving ? "Saving..." : "Save Order"}
-            </Button>
           </div>
         </div>
 
@@ -1021,6 +999,31 @@ const OrderForm = () => {
             </div>
           </CardContent>
         </Card>
+        {/* Save Buttons — Bottom */}
+        <div className="flex justify-end gap-3 pt-4 pb-8">
+          {!isEdit && (
+            <Button
+              type="submit"
+              disabled={saving}
+              onClick={() => setGenerateInvoice(true)}
+              className="bg-[#2D2420] hover:bg-[#2D2420]/90 text-[#FDFBF7] rounded-full px-8 h-12"
+              data-testid="save-and-invoice-button"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              {saving ? "Saving..." : "Save & Invoice"}
+            </Button>
+          )}
+          <Button
+            type="submit"
+            disabled={saving}
+            onClick={() => setGenerateInvoice(false)}
+            className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white rounded-full px-8 h-12"
+            data-testid="save-order-button"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            {saving ? "Saving..." : "Save Order"}
+          </Button>
+        </div>
       </form>
 
       {/* Payment Modal */}
