@@ -211,7 +211,7 @@ const Employees = () => {
                   <div className="space-y-1 text-sm">
                     <div className="flex items-center gap-2 text-[#5C504A]"><Phone className="w-4 h-4 text-[#8A7D76]" />{emp.phone}</div>
                     {emp.email && <div className="flex items-center gap-2 text-[#5C504A]"><Mail className="w-4 h-4 text-[#8A7D76]" />{emp.email}</div>}
-                    <div className="flex items-center gap-2 text-[#5C504A]"><IndianRupee className="w-4 h-4 text-[#8A7D76]" />Rate: {fmt(emp.salary)} {emp.pay_type === "hourly" ? "/hour" : "/week"}</div>
+                    <div className="flex items-center gap-2 text-[#5C504A]"><IndianRupee className="w-4 h-4 text-[#8A7D76]" />Rate: {fmt(emp.salary)} {emp.pay_type === "hourly" ? "/hour" : emp.pay_type === "monthly" ? "/month" : "/week"}</div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#EFEBE4]">
@@ -280,7 +280,7 @@ const Employees = () => {
                 <Label className="text-[10px] uppercase tracking-[0.15em] text-[#2D2420]/50">Type *</Label>
                 <select value={newEmployee.role} onChange={(e) => {
                   const role = e.target.value;
-                  const defaultPay = role === "worker" ? "hourly" : "weekly";
+                  const defaultPay = role === "worker" ? "hourly" : role === "manager" ? "monthly" : "weekly";
                   setNewEmployee({ ...newEmployee, role, pay_type: defaultPay });
                 }} className="h-10 w-full border-b border-[#2D2420]/15 bg-transparent text-sm focus:outline-none focus:border-[#2D2420]">
                   <option value="master">Master</option>
@@ -294,10 +294,11 @@ const Employees = () => {
                 <select value={newEmployee.pay_type} onChange={(e) => setNewEmployee({ ...newEmployee, pay_type: e.target.value })} className="h-10 w-full border-b border-[#2D2420]/15 bg-transparent text-sm focus:outline-none focus:border-[#2D2420]">
                   <option value="weekly">Weekly</option>
                   <option value="hourly">Hourly</option>
+                  <option value="monthly">Monthly</option>
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase tracking-[0.15em] text-[#2D2420]/50">Rate ({newEmployee.pay_type === "hourly" ? "/hr" : "/wk"})</Label>
+                <Label className="text-[10px] uppercase tracking-[0.15em] text-[#2D2420]/50">Rate ({newEmployee.pay_type === "hourly" ? "/hr" : newEmployee.pay_type === "monthly" ? "/mo" : "/wk"})</Label>
                 <Input type="number" value={newEmployee.salary} onChange={(e) => setNewEmployee({ ...newEmployee, salary: parseFloat(e.target.value) || 0 })} className="bg-transparent border-b border-[#2D2420]/15 rounded-none h-10 px-0 focus:border-[#2D2420] focus:ring-0" />
               </div>
             </div>
