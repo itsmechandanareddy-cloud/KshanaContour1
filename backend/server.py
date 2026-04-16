@@ -82,10 +82,16 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 app = FastAPI(title="Kshana Contour Boutique API")
 
 # CORS middleware - MUST be added FIRST before routes
+cors_origins = os.environ.get("CORS_ORIGINS", "*")
+if cors_origins == "*":
+    origins_list = ["*"]
+else:
+    origins_list = [o.strip() for o in cors_origins.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["*"],
+    allow_credentials=False,
+    allow_origins=origins_list,
     allow_methods=["*"],
     allow_headers=["*"],
 )

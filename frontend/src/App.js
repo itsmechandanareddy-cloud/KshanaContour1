@@ -48,7 +48,7 @@ const AuthProvider = ({ children }) => {
     try {
       const response = await axios.get(`${API}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true
+        withCredentials: false
       });
       setUser(response.data);
     } catch (error) {
@@ -67,7 +67,7 @@ const AuthProvider = ({ children }) => {
         : { name: identifier, password };
       
       const response = await axios.post(`${API}${endpoint}`, payload, {
-        withCredentials: true
+        withCredentials: false
       });
       
       const userData = response.data;
@@ -83,7 +83,7 @@ const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
+      await axios.post(`${API}/auth/logout`, {}, { withCredentials: false });
     } catch (e) {}
     localStorage.removeItem("token");
     localStorage.removeItem("user");
