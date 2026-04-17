@@ -116,7 +116,7 @@ db = client[os.environ['DB_NAME']]
 # JWT Config
 JWT_SECRET = os.environ.get("JWT_SECRET", secrets.token_hex(32))
 JWT_ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 1 hour
 
 # Create the main app
 app = FastAPI(title="Kshana Contour Boutique API")

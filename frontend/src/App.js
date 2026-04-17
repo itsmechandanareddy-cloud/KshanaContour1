@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Toaster } from "./components/ui/sonner";
@@ -88,8 +88,36 @@ const AuthProvider = ({ children }) => {
     } catch (e) {}
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("lastActivity");
     setUser(null);
   };
+
+  // Auto-logout after 1 hour of inactivity
+  const INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 1 hour in ms
+
+  const updateActivity = useCallback(() => {
+    if (user) localStorage.setItem("lastActivity", Date.now().toString());
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    localStorage.setItem("lastActivity", Date.now().toString());
+    const events = ["mousedown", "keydown", "scroll", "touchstart"];
+    events.forEach(e => window.addEventListener(e, updateActivity));
+
+    const interval = setInterval(() => {
+      const last = parseInt(localStorage.getItem("lastActivity") || "0");
+      if (last && Date.now() - last > INACTIVITY_TIMEOUT) {
+        logout();
+        window.location.href = "/";
+      }
+    }, 30000); // check every 30 seconds
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, updateActivity));
+      clearInterval(interval);
+    };
+  }, [user, updateActivity]);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, checkAuth, setUser }}>
@@ -97,6 +125,20 @@ const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+// Global axios interceptor - auto logout on 401 (token expired)
+axios.interceptors.response.use(
+  res => res,
+  err => {
+    if (err.response?.status === 401 && localStorage.getItem("token")) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("lastActivity");
+      window.location.href = "/";
+    }
+    return Promise.reject(err);
+  }
+);
 
 // Protected Route Component
 const ProtectedRoute = ({ children, role }) => {
