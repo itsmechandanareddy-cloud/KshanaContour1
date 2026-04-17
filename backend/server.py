@@ -231,7 +231,7 @@ class OrderCreate(BaseModel):
     delivery_date: str
     items: List[MeasurementItem]
     measurements: Optional[dict] = None
-    tax_percentage: float = 18
+    tax_percentage: float = 0
     advance_amount: float = 0
     advance_date: Optional[str] = None
     advance_mode: Optional[str] = None
@@ -613,10 +613,10 @@ async def update_order(order_id: str, data: OrderUpdate, request: Request):
     if "items" in update_data:
         items = update_data["items"]
         subtotal = sum(item["cost"] for item in items)
-        tax_pct = update_data.get("tax_percentage", 18)
+        tax_pct = update_data.get("tax_percentage", 0)
         order = await db.orders.find_one({"order_id": order_id})
         if order:
-            tax_pct = update_data.get("tax_percentage", order.get("tax_percentage", 18))
+            tax_pct = update_data.get("tax_percentage", order.get("tax_percentage", 0))
         tax = subtotal * (tax_pct / 100)
         total = subtotal + tax
         paid = sum(p["amount"] for p in order.get("payments", [])) if order else 0
@@ -2148,6 +2148,17 @@ async def seed_production_data(secret: str = ""):
     for emp in employees_data:
         await db.employees.insert_one({"name":emp["name"],"role":emp["role"],"phone":emp["phone"],"pay_type":emp["pay_type"],"salary":emp["salary"],"payments":emp["payments"],"documents":[],"created_at":now})
     results["employees_created"] = len(employees_data)
+    
+    # ===== FIX ALL ORDERS: Remove 18% tax, set to 0% =====
+    all_orders = await db.orders.find({}).to_list(5000)
+    tax_fixed = 0
+    for o in all_orders:
+        if o.get("tax_percentage", 0) != 0 or o.get("tax_amount", 0) != 0:
+            subtotal = o.get("subtotal", o.get("total", 0))
+            paid = sum(p.get("amount", 0) for p in o.get("payments", []))
+            await db.orders.update_one({"_id": o["_id"]}, {"$set": {"tax_percentage": 0, "tax_amount": 0, "total": subtotal, "balance": max(0, subtotal - paid)}})
+            tax_fixed += 1
+    results["orders_tax_fixed"] = tax_fixed
     
     return {"status": "success", "results": results}
 
