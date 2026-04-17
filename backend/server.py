@@ -1240,6 +1240,9 @@ async def get_gallery():
     items = await db.gallery.find({}).sort("created_at", -1).to_list(100)
     for item in items:
         item["id"] = str(item.pop("_id"))
+        # If image_url is a full Cloudinary URL, remove file_id so frontend uses direct URL
+        if item.get("image_url", "").startswith("http"):
+            item.pop("file_id", None)
     return items
 
 @api_router.delete("/gallery/{item_id}")
