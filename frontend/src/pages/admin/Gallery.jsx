@@ -82,7 +82,8 @@ const Gallery = () => {
       setNewCategory("");
       fetchGallery();
     } catch (error) {
-      const msg = error.response?.data?.detail || error.response?.data?.error?.message || "Failed to upload image";
+      console.error("Upload error:", error);
+      const msg = error.response?.data?.detail || error.response?.data?.error?.message || error.message || "Failed to upload image";
       toast.error(msg);
     } finally {
       setUploading(false);

@@ -2404,6 +2404,18 @@ async def seed_production_data(secret: str = ""):
             tax_fixed += 1
     results["orders_tax_fixed"] = tax_fixed
     
+    # ===== RESET ADMIN ACCOUNT =====
+    admin_phone = os.environ.get("ADMIN_PHONE", "9187202605")
+    admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
+    await db.admins.delete_many({})
+    await db.admins.insert_one({
+        "phone": admin_phone,
+        "password_hash": hp(admin_password),
+        "name": "Admin",
+        "created_at": now
+    })
+    results["admin_reset"] = True
+    
     return {"status": "success", "results": results}
 
 # ============== STARTUP EVENT ==============
