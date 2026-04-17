@@ -99,7 +99,7 @@ const Dashboard = () => {
       const { partnership } = await fetchExportData();
       const rows = partnership.map(e => ({
         "Date": e.date || "", "Reason": e.reason || "", "Paid To": e.paid_to || "",
-        "Chandana Invested": e.chandana || 0, "Akankasha Invested": e.akanksha || 0,
+        "Chandana Invested": e.chandana || 0, "Akanksha Invested": e.akanksha || 0,
         "SBI Account Paid": e.sbi || 0, "Mode": e.mode || "", "UPI ID": e.upi_id || "",
         "Comments": e.comments || ""
       }));
@@ -363,7 +363,7 @@ const Dashboard = () => {
               <p className="font-['Cormorant_Garamond'] text-xl font-medium text-[#C05C3B]">{fmt(stats?.total_invested_chandana || 0)}</p>
             </div>
             <div className="p-4 bg-[#D19B5A]/10 rounded-sm">
-              <p className="text-[10px] uppercase tracking-[0.15em] text-[#8A7D76] mb-1">Akankasha Invested</p>
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#8A7D76] mb-1">Akanksha Invested</p>
               <p className="font-['Cormorant_Garamond'] text-xl font-medium text-[#D19B5A]">{fmt(stats?.total_invested_akanksha || 0)}</p>
             </div>
             <div className="p-4 bg-[#B85450]/10 rounded-sm">
@@ -493,7 +493,7 @@ const Dashboard = () => {
                 <p className="text-xs uppercase tracking-[0.1em] text-[#2D2420] font-semibold">Partnership</p>
                 <Button size="sm" onClick={exportPartnership} disabled={exporting === "partnership"}
                   className="bg-[#D19B5A] hover:bg-[#C08A4A] text-[#2D2420] text-[10px] uppercase tracking-wider h-8 rounded-none w-full" data-testid="export-partnership">
-                  {exporting === "partnership" ? "..." : "Chandana & Akankasha"}
+                  {exporting === "partnership" ? "..." : "Chandana & Akanksha"}
                 </Button>
               </div>
               {/* Incoming */}
