@@ -154,25 +154,27 @@ button:active {
 /* WhatsApp floating button */
 .whatsapp-float {
   position: fixed;
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   bottom: 24px;
   right: 24px;
-  background-color: #25D366;
-  color: #fff;
+  background-color: #2D2420;
+  color: #D19B5A;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28px;
-  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+  box-shadow: 0 4px 12px rgba(45, 36, 32, 0.3);
   z-index: 100;
   transition: all 0.3s ease;
 }
 
 .whatsapp-float:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.45);
+  background-color: #C05C3B;
+  color: #FDFBF7;
+  box-shadow: 0 6px 16px rgba(192, 92, 59, 0.4);
 }
 
 /* Sidebar styling */
