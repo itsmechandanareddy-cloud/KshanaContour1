@@ -6,11 +6,17 @@ Cash payments -> Cash account in partnership
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+import certifi
 from dotenv import load_dotenv
 load_dotenv()
 
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
+if "mongodb+srv" in mongo_url or "mongodb.net" in mongo_url:
+    sep = "&" if "?" in mongo_url else "?"
+    mongo_url = f"{mongo_url}{sep}tls=true&tlsInsecure=true"
+    client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
+else:
+    client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # 52 incoming payment records extracted from Tracker.xlsx "Revenue (income Tracker)" sheet

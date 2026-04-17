@@ -21,6 +21,7 @@
 - [x] **Export Center**: Export Orders, Employees, Partnership, Incoming/Outgoing Payments to .xlsx
 - [x] **Incoming Payments Seeded**: 52 real payment records from Tracker.xlsx mapped to KSH-XX orders
 - [x] **Partnership Income Tracking**: UPI payments → Kshana account, Cash payments → Cash account (5 tabs: Chandana, Akanksha, Kshana Out, Kshana UPI, Cash)
+- [x] **Dashboard Cleanup**: Removed Recent Orders and Google Reviews sections per user request
 
 ## Test Credentials
 - **Admin**: Phone: 9187202605, Password: admin123
