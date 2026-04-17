@@ -2308,6 +2308,34 @@ async def seed_production_data(secret: str = ""):
         await db.employees.insert_one({"name":emp["name"],"role":emp["role"],"phone":emp["phone"],"pay_type":emp["pay_type"],"salary":emp["salary"],"payments":emp["payments"],"documents":[],"created_at":now})
     results["employees_created"] = len(employees_data)
     
+    # ===== SEED RAW MATERIALS from Tracker.xlsx =====
+    await db.materials.delete_many({})
+    materials_data = [
+        {"name": "Kuchchu Thread", "description": "Kuchchu work materials", "quantity": "1 lot", "cost": 1350, "purchase_date": "2026-01-02", "payment_mode": "upi", "supplier": "Ramaa"},
+        {"name": "Kuchchu Thread", "description": "Kuchchu work materials (additional)", "quantity": "1 lot", "cost": 450, "purchase_date": "2026-01-06", "payment_mode": "upi", "supplier": "Ramaa"},
+        {"name": "Sofa Cloth", "description": "Cloth for shop sofa", "quantity": "1 lot", "cost": 4000, "purchase_date": "2026-01-27", "payment_mode": "upi", "supplier": "Mohammed Rafi"},
+        {"name": "Lining & Materials", "description": "Lining and other material for blouses", "quantity": "1 lot", "cost": 2000, "purchase_date": "2026-02-07", "payment_mode": "upi", "supplier": "Tabrez"},
+        {"name": "Falls, Kuchchu & Zigzag", "description": "Falls, Kuchchu and Zigzag (Nagaratna redo) - KSH-12,14,15,32", "quantity": "4 orders", "cost": 1250, "purchase_date": "2026-02-10", "payment_mode": "upi", "supplier": "Anitha"},
+        {"name": "Worker Material + Salary", "description": "Feb 2nd week material (2827) included with salary - KSH-19,18,23", "quantity": "1 lot", "cost": 2827, "purchase_date": "2026-02-16", "payment_mode": "upi", "supplier": "Tabrez"},
+        {"name": "Falls, Kuchchu & Zigzag", "description": "Falls, Kuchchu and Zigzag work", "quantity": "1 lot", "cost": 500, "purchase_date": "2026-02-18", "payment_mode": "cash", "supplier": "Anitha"},
+        {"name": "Falls & Zigzag", "description": "Falls Zig+Zag work", "quantity": "1 lot", "cost": 350, "purchase_date": "2026-02-19", "payment_mode": "upi", "supplier": "Anitha"},
+        {"name": "Blouse Cutting Material", "description": "Blouse cutting materials", "quantity": "1 lot", "cost": 3332, "purchase_date": "2026-02-23", "payment_mode": "upi", "supplier": "Tabrez"},
+        {"name": "Blouse Cutting Material", "description": "Blouse cutting materials", "quantity": "1 lot", "cost": 3000, "purchase_date": "2026-02-23", "payment_mode": "cash", "supplier": "Tabrez"},
+        {"name": "Blouse Cutting Material", "description": "Blouse cutting materials", "quantity": "1 lot", "cost": 850, "purchase_date": "2026-02-27", "payment_mode": "cash", "supplier": "Tabrez"},
+        {"name": "Falls, Kuchchu & Zigzag", "description": "Falls, Kuchchu and Zigzag work", "quantity": "1 lot", "cost": 1130, "purchase_date": "2026-03-02", "payment_mode": "upi", "supplier": "Anitha"},
+        {"name": "Blouse Cutting Material", "description": "Blouse cutting materials", "quantity": "1 lot", "cost": 3022, "purchase_date": "2026-03-02", "payment_mode": "upi", "supplier": "Tabrez"},
+        {"name": "Blouse Cutting Material", "description": "Blouse cutting materials", "quantity": "1 lot", "cost": 866, "purchase_date": "2026-03-02", "payment_mode": "upi", "supplier": "Tabrez"},
+        {"name": "Market Materials", "description": "Materials purchased from market", "quantity": "1 lot", "cost": 7800, "purchase_date": "2026-03-09", "payment_mode": "cash", "supplier": "Srinivasa Reddy (Market)"},
+        {"name": "Falls, Kuchchu & Zigzag", "description": "Falls, Kuchchu and Zigzag work", "quantity": "1 lot", "cost": 1330, "purchase_date": "2026-03-09", "payment_mode": "upi", "supplier": "Anitha"},
+        {"name": "Blouse Cutting Material", "description": "Blouse cutting materials", "quantity": "1 lot", "cost": 4660, "purchase_date": "2026-03-09", "payment_mode": "upi", "supplier": "Tabrez"},
+        {"name": "Falls, Kuchchu & Zigzag", "description": "Falls, Kuchchu and Zigzag work", "quantity": "1 lot", "cost": 850, "purchase_date": "2026-03-17", "payment_mode": "upi", "supplier": "Anitha"},
+        {"name": "Lining & Materials", "description": "Lining and other material", "quantity": "1 lot", "cost": 1000, "purchase_date": "2026-03-17", "payment_mode": "cash", "supplier": "Srinivasa Reddy"},
+        {"name": "Bill Books", "description": "Bill books for invoicing", "quantity": "1 set", "cost": 3750, "purchase_date": "2026-02-15", "payment_mode": "upi", "supplier": "Ranjith"},
+    ]
+    for m in materials_data:
+        await db.materials.insert_one({**m, "created_at": now})
+    results["materials_created"] = len(materials_data)
+    
     # ===== FIX ALL ORDERS: Remove 18% tax, set to 0% =====
     all_orders = await db.orders.find({}).to_list(5000)
     tax_fixed = 0
