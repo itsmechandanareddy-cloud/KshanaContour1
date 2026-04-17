@@ -280,6 +280,40 @@ const Dashboard = () => {
           ))}
         </div>
 
+        {/* Financial Overview */}
+        <div className="bg-white border border-[#EFEBE4] p-6" data-testid="financial-overview">
+          <div className="flex items-center gap-3 mb-5">
+            <IndianRupee className="w-5 h-5 text-[#D19B5A]" strokeWidth={1.5} />
+            <h2 className="font-['Cormorant_Garamond'] text-2xl font-light text-[#2D2420]">Financial Overview</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="p-4 bg-[#7E8B76]/10 rounded-sm">
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#8A7D76] mb-1">Total Income</p>
+              <p className="font-['Cormorant_Garamond'] text-xl font-medium text-[#7E8B76]">{fmt(stats?.total_income || 0)}</p>
+            </div>
+            <div className="p-4 bg-[#7A8B99]/10 rounded-sm">
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#8A7D76] mb-1">SBI Outgoing</p>
+              <p className="font-['Cormorant_Garamond'] text-xl font-medium text-[#7A8B99]">{fmt(stats?.total_outgoing_sbi || 0)}</p>
+            </div>
+            <div className={`p-4 rounded-sm ${(stats?.net_profit || 0) >= 0 ? "bg-[#7E8B76]/10" : "bg-[#B85450]/10"}`}>
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#8A7D76] mb-1">Net Profit</p>
+              <p className={`font-['Cormorant_Garamond'] text-xl font-bold ${(stats?.net_profit || 0) >= 0 ? "text-[#7E8B76]" : "text-[#B85450]"}`}>{fmt(stats?.net_profit || 0)}</p>
+            </div>
+            <div className="p-4 bg-[#C05C3B]/10 rounded-sm">
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#8A7D76] mb-1">Chandana Invested</p>
+              <p className="font-['Cormorant_Garamond'] text-xl font-medium text-[#C05C3B]">{fmt(stats?.total_invested_chandana || 0)}</p>
+            </div>
+            <div className="p-4 bg-[#D19B5A]/10 rounded-sm">
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#8A7D76] mb-1">Akanksha Invested</p>
+              <p className="font-['Cormorant_Garamond'] text-xl font-medium text-[#D19B5A]">{fmt(stats?.total_invested_akanksha || 0)}</p>
+            </div>
+            <div className="p-4 bg-[#B85450]/10 rounded-sm">
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#8A7D76] mb-1">Balance Due</p>
+              <p className="font-['Cormorant_Garamond'] text-xl font-medium text-[#B85450]">{fmt(stats?.total_balance_due || 0)}</p>
+            </div>
+          </div>
+        </div>
+
         {/* Main Grid */}
         <div className="grid lg:grid-cols-1 gap-6">
 

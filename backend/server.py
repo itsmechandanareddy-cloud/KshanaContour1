@@ -1356,6 +1356,18 @@ async def get_dashboard_stats(request: Request):
                 except:
                     pass
     
+    # Overall financials
+    total_income = sum(o.get("total", 0) - o.get("balance", 0) for o in all_orders)
+    
+    # Get all outgoing: partnership expenses (SBI + Chandana + Akanksha)
+    all_expenses = await db.partnership.find({"type": {"$ne": "income"}}, {"_id": 0, "chandana": 1, "akanksha": 1, "sbi": 1}).to_list(5000)
+    total_chandana = sum(e.get("chandana", 0) for e in all_expenses)
+    total_akanksha = sum(e.get("akanksha", 0) for e in all_expenses)
+    total_sbi = sum(e.get("sbi", 0) for e in all_expenses)
+    total_outgoing = total_chandana + total_akanksha + total_sbi
+    net_profit = total_income - total_sbi  # Profit = income - business expenses (SBI)
+    total_balance_due = sum(o.get("balance", 0) for o in all_orders)
+    
     return {
         "monthly_orders": len(monthly_orders),
         "weekly_orders": len(weekly_orders),
@@ -1365,7 +1377,14 @@ async def get_dashboard_stats(request: Request):
         "in_progress": in_progress,
         "ready_to_deliver": ready_to_deliver,
         "due_soon": due_soon,
-        "due_soon_count": len(due_soon)
+        "due_soon_count": len(due_soon),
+        "total_income": total_income,
+        "total_outgoing_sbi": total_sbi,
+        "total_invested_chandana": total_chandana,
+        "total_invested_akanksha": total_akanksha,
+        "total_outgoing_all": total_outgoing,
+        "net_profit": net_profit,
+        "total_balance_due": total_balance_due
     }
 
 @api_router.get("/dashboard/charts")
