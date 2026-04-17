@@ -1,11 +1,16 @@
-"""Seed all 64 orders into MongoDB Atlas"""
+"""Seed all 64 orders into MongoDB"""
 from pymongo import MongoClient
-import certifi, bcrypt
+import certifi, bcrypt, os
 from datetime import datetime, timezone
+from dotenv import load_dotenv
+load_dotenv()
 
-url = 'mongodb+srv://kshana_admin:kshana2026@cluster0.43xxwwc.mongodb.net/kshana_boutique?retryWrites=true&w=majority'
-client = MongoClient(url, tlsCAFile=certifi.where())
-db = client['kshana_boutique']
+url = os.environ['MONGO_URL']
+if "mongodb+srv" in url or "mongodb.net" in url:
+    client = MongoClient(url, tlsCAFile=certifi.where())
+else:
+    client = MongoClient(url)
+db = client[os.environ['DB_NAME']]
 
 def hp(pw): return bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
 

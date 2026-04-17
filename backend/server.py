@@ -1365,7 +1365,7 @@ async def get_financial_summary(request: Request):
         raise HTTPException(status_code=403, detail="Admin access required")
     
     now = datetime.now(timezone.utc)
-    all_orders = await db.orders.find({}, {"_id": 0, "total": 1, "balance": 1, "payments": 1, "created_at": 1, "status": 1, "order_id": 1}).to_list(5000)
+    all_orders = await db.orders.find({}, {"_id": 0, "total": 1, "balance": 1, "payments": 1, "created_at": 1, "status": 1, "order_id": 1, "customer_name": 1, "customer_phone": 1, "delivery_date": 1}).to_list(5000)
     all_employees = await db.employees.find({}, {"payments": 1, "name": 1}).to_list(500)
     all_materials = await db.materials.find({}, {"_id": 0, "cost": 1, "quantity": 1, "purchase_date": 1, "name": 1, "payment_mode": 1}).to_list(5000)
     
@@ -1513,13 +1513,21 @@ async def get_partnership_report(request: Request):
     
     entries = await db.partnership.find({}, {"_id": 0}).to_list(5000)
     
-    chandana_total = sum(e.get("chandana", 0) for e in entries)
-    akanksha_total = sum(e.get("akanksha", 0) for e in entries)
-    sbi_total = sum(e.get("sbi", 0) for e in entries)
+    # Separate income and expense entries
+    expense_entries = [e for e in entries if e.get("type") != "income"]
+    income_entries = [e for e in entries if e.get("type") == "income"]
     
-    # Get all order income (goes to Kshana account)
-    all_orders = await db.orders.find({}, {"_id": 0, "total": 1, "balance": 1, "payments": 1}).to_list(5000)
-    total_order_income = sum(p.get("amount", 0) for o in all_orders for p in o.get("payments", []))
+    chandana_total = sum(e.get("chandana", 0) for e in expense_entries)
+    akanksha_total = sum(e.get("akanksha", 0) for e in expense_entries)
+    sbi_total = sum(e.get("sbi", 0) for e in expense_entries)
+    
+    # Income from partnership income entries (kshana=UPI, cash=Cash)
+    kshana_income_total = sum(e.get("kshana", 0) for e in income_entries)
+    cash_income_total = sum(e.get("cash", 0) for e in income_entries)
+    total_order_income = kshana_income_total + cash_income_total
+    
+    # Also get order totals for balance tracking
+    all_orders = await db.orders.find({}, {"_id": 0, "total": 1, "balance": 1, "payments": 1, "order_id": 1, "customer_name": 1}).to_list(5000)
     total_order_value = sum(o.get("total", 0) for o in all_orders)
     total_balance = sum(o.get("balance", 0) for o in all_orders)
     
@@ -1540,25 +1548,26 @@ async def get_partnership_report(request: Request):
     # Monthly breakdown
     monthly = {}
     all_months = set()
-    for e in entries:
+    for e in expense_entries:
         month = e.get("date", "")[:7]
         if month:
             all_months.add(month)
             if month not in monthly:
-                monthly[month] = {"month": month, "chandana_invested": 0, "akanksha_invested": 0, "sbi_outgoing": 0, "income": 0}
+                monthly[month] = {"month": month, "chandana_invested": 0, "akanksha_invested": 0, "sbi_outgoing": 0, "income": 0, "kshana_income": 0, "cash_income": 0}
             monthly[month]["chandana_invested"] += e.get("chandana", 0)
             monthly[month]["akanksha_invested"] += e.get("akanksha", 0)
             monthly[month]["sbi_outgoing"] += e.get("sbi", 0)
     
-    # Monthly income from orders
-    for o in all_orders:
-        for p in o.get("payments", []):
-            pdate = p.get("date", "")[:7]
-            if pdate:
-                all_months.add(pdate)
-                if pdate not in monthly:
-                    monthly[pdate] = {"month": pdate, "chandana_invested": 0, "akanksha_invested": 0, "sbi_outgoing": 0, "income": 0}
-                monthly[pdate]["income"] += p.get("amount", 0)
+    # Monthly income from income partnership entries
+    for e in income_entries:
+        month = e.get("date", "")[:7]
+        if month:
+            all_months.add(month)
+            if month not in monthly:
+                monthly[month] = {"month": month, "chandana_invested": 0, "akanksha_invested": 0, "sbi_outgoing": 0, "income": 0, "kshana_income": 0, "cash_income": 0}
+            monthly[month]["kshana_income"] += e.get("kshana", 0)
+            monthly[month]["cash_income"] += e.get("cash", 0)
+            monthly[month]["income"] += e.get("kshana", 0) + e.get("cash", 0)
     
     sorted_monthly = sorted(monthly.values(), key=lambda x: x["month"])
     
@@ -1577,7 +1586,7 @@ async def get_partnership_report(request: Request):
     # Entries with paid_to containing "Chandana" or "Akanksha" in SBI are withdrawals
     chandana_withdrawals = 0
     akanksha_withdrawals = 0
-    for e in entries:
+    for e in expense_entries:
         if e.get("sbi", 0) > 0:
             paid_to = (e.get("paid_to", "") or "").lower()
             reason = (e.get("reason", "") or "").lower()
@@ -1619,21 +1628,26 @@ async def get_partnership_report(request: Request):
         m["pool"] = pool
     
     # Chandana detail entries
-    chandana_entries = [e for e in entries if e.get("chandana", 0) > 0]
-    akanksha_entries = [e for e in entries if e.get("akanksha", 0) > 0]
-    sbi_entries = [e for e in entries if e.get("sbi", 0) > 0]
+    chandana_entries = [e for e in expense_entries if e.get("chandana", 0) > 0]
+    akanksha_entries = [e for e in expense_entries if e.get("akanksha", 0) > 0]
+    sbi_entries = [e for e in expense_entries if e.get("sbi", 0) > 0]
     
-    # Income payments for kshana account
+    # Income payments from partnership income entries
+    kshana_income_entries = [e for e in income_entries if e.get("kshana", 0) > 0]
+    cash_income_entries_list = [e for e in income_entries if e.get("cash", 0) > 0]
+    
+    # Build income payments list for display
     income_payments = []
-    for o in all_orders:
-        for p in o.get("payments", []):
-            income_payments.append({
-                "order_id": o.get("order_id"),
-                "customer_name": o.get("customer_name"),
-                "amount": p.get("amount", 0),
-                "date": p.get("date", ""),
-                "mode": p.get("mode", "")
-            })
+    for e in income_entries:
+        income_payments.append({
+            "order_id": e.get("order", ""),
+            "customer_name": e.get("paid_to", ""),
+            "amount": e.get("kshana", 0) + e.get("cash", 0),
+            "date": e.get("date", ""),
+            "mode": e.get("mode", ""),
+            "item": e.get("reason", "").replace("Customer Payment - ", ""),
+            "comments": e.get("comments", "")
+        })
     income_payments.sort(key=lambda x: x.get("date", ""), reverse=True)
     
     # Equal split calculation
@@ -1666,9 +1680,13 @@ async def get_partnership_report(request: Request):
         },
         "kshana_account": {
             "total_income": total_order_income,
+            "kshana_upi_income": kshana_income_total,
+            "cash_income": cash_income_total,
             "total_sbi_outgoing": sbi_total,
             "balance": kshana_balance,
             "sbi_entries": sbi_entries,
+            "kshana_income_entries": kshana_income_entries,
+            "cash_income_entries": cash_income_entries_list,
             "income_payments": income_payments
         },
         "summary": {
@@ -1695,21 +1713,32 @@ class PartnershipEntry(BaseModel):
     chandana: float = 0
     akanksha: float = 0
     sbi: float = 0
+    kshana: float = 0
+    cash: float = 0
     mode: str = "UPI"
     comments: Optional[str] = ""
+    type: Optional[str] = "expense"
 
 @api_router.get("/partnership/entries")
-async def get_partnership_entries(partner: Optional[str] = None, request: Request = None):
+async def get_partnership_entries(partner: Optional[str] = None, entry_type: Optional[str] = None, request: Request = None):
     user = await get_current_user(request)
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     query = {}
+    if entry_type == "income":
+        query["type"] = "income"
+    elif entry_type == "expense":
+        query["type"] = {"$ne": "income"}
     if partner == "chandana":
         query["chandana"] = {"$gt": 0}
     elif partner == "akanksha":
         query["akanksha"] = {"$gt": 0}
     elif partner == "sbi":
         query["sbi"] = {"$gt": 0}
+    elif partner == "kshana":
+        query["kshana"] = {"$gt": 0}
+    elif partner == "cash":
+        query["cash"] = {"$gt": 0}
     entries = await db.partnership.find(query).sort("date", -1).to_list(5000)
     for e in entries:
         e["id"] = str(e.pop("_id"))

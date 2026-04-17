@@ -21,7 +21,7 @@ const Partnership = () => {
   const [activeTab, setActiveTab] = useState("chandana");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editEntry, setEditEntry] = useState(null);
-  const [form, setForm] = useState({ date: "", order: "NA", reason: "", paid_to: "", chandana: 0, akanksha: 0, sbi: 0, mode: "UPI", comments: "" });
+  const [form, setForm] = useState({ date: "", order: "NA", reason: "", paid_to: "", chandana: 0, akanksha: 0, sbi: 0, kshana: 0, cash: 0, mode: "UPI", comments: "", type: "expense" });
 
   useEffect(() => { fetchAll(); }, []);
   useEffect(() => { fetchEntries(); }, [activeTab]);
@@ -39,24 +39,35 @@ const Partnership = () => {
 
   const fetchEntries = async () => {
     try {
-      const partner = activeTab === "kshana" ? "sbi" : activeTab;
-      const r = await axios.get(`${API}/partnership/entries?partner=${partner}`, { headers: h() });
+      let partner = activeTab;
+      let entryType = "";
+      if (activeTab === "kshana_outgoing") {
+        partner = "sbi";
+        entryType = "expense";
+      } else if (activeTab === "kshana_income") {
+        partner = "kshana";
+        entryType = "income";
+      } else if (activeTab === "cash_income") {
+        partner = "cash";
+        entryType = "income";
+      }
+      let url = `${API}/partnership/entries?partner=${partner}`;
+      if (entryType) url += `&entry_type=${entryType}`;
+      const r = await axios.get(url, { headers: h() });
       setEntries(r.data);
     } catch { toast.error("Failed to load entries"); }
   };
 
   const openAdd = () => {
-    const base = { date: "", order: "NA", reason: "", paid_to: "", chandana: 0, akanksha: 0, sbi: 0, mode: "UPI", comments: "" };
-    if (activeTab === "chandana") base.chandana = 0;
-    if (activeTab === "akanksha") base.akanksha = 0;
-    if (activeTab === "kshana") base.sbi = 0;
+    const isIncome = activeTab === "kshana_income" || activeTab === "cash_income";
+    const base = { date: "", order: "NA", reason: "", paid_to: "", chandana: 0, akanksha: 0, sbi: 0, kshana: 0, cash: 0, mode: "UPI", comments: "", type: isIncome ? "income" : "expense" };
     setForm(base);
     setEditEntry(null);
     setShowAddModal(true);
   };
 
   const openEdit = (entry) => {
-    setForm({ date: entry.date, order: entry.order || "NA", reason: entry.reason, paid_to: entry.paid_to, chandana: entry.chandana || 0, akanksha: entry.akanksha || 0, sbi: entry.sbi || 0, mode: entry.mode || "UPI", comments: entry.comments || "" });
+    setForm({ date: entry.date, order: entry.order || "NA", reason: entry.reason, paid_to: entry.paid_to, chandana: entry.chandana || 0, akanksha: entry.akanksha || 0, sbi: entry.sbi || 0, kshana: entry.kshana || 0, cash: entry.cash || 0, mode: entry.mode || "UPI", comments: entry.comments || "", type: entry.type || "expense" });
     setEditEntry(entry);
     setShowAddModal(true);
   };
@@ -94,7 +105,15 @@ const Partnership = () => {
   if (loading) return <AdminLayout><div className="flex items-center justify-center h-[60vh]"><div className="animate-spin rounded-full h-12 w-12 border-4 border-[#C05C3B] border-t-transparent"></div></div></AdminLayout>;
 
   const p = report;
-  const amountField = activeTab === "chandana" ? "chandana" : activeTab === "akanksha" ? "akanksha" : "sbi";
+  const amountField = activeTab === "chandana" ? "chandana" : activeTab === "akanksha" ? "akanksha" : activeTab === "kshana_income" ? "kshana" : activeTab === "cash_income" ? "cash" : "sbi";
+
+  const TAB_CONFIG = {
+    chandana: { label: "Chandana", title: "Chandana's Investments", btnText: "Add Record", color: "bg-[#C05C3B]" },
+    akanksha: { label: "Akanksha", title: "Akanksha's Investments", btnText: "Add Record", color: "bg-[#D19B5A]" },
+    kshana_outgoing: { label: "Kshana (Out)", title: "Kshana Outgoing Payments", btnText: "Add Outgoing", color: "bg-[#7A8B99]" },
+    kshana_income: { label: "Kshana (UPI)", title: "Kshana UPI Income", btnText: "Add UPI Income", color: "bg-[#7E8B76]" },
+    cash_income: { label: "Cash", title: "Cash Income", btnText: "Add Cash Income", color: "bg-[#B8854A]" },
+  };
 
   return (
     <AdminLayout>
@@ -125,7 +144,8 @@ const Partnership = () => {
           <Card className="bg-gradient-to-br from-[#7A8B99] to-[#637382] text-white">
             <CardContent className="p-6 space-y-2">
               <p className="text-lg font-semibold">Kshana Account</p>
-              <div className="flex justify-between text-sm"><span className="text-white/80">Total Income (Orders)</span><span className="font-semibold">{fmt(p?.kshana_account?.total_income)}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-white/80">UPI Income</span><span className="font-semibold">{fmt(p?.kshana_account?.kshana_upi_income)}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-white/80">Cash Income</span><span className="font-semibold">{fmt(p?.kshana_account?.cash_income)}</span></div>
               <div className="flex justify-between text-sm"><span className="text-white/80">Outgoing (SBI)</span><span className="font-semibold">{fmt(p?.kshana_account?.total_sbi_outgoing)}</span></div>
               <div className="flex justify-between border-t border-white/20 pt-2"><span className="text-white/80">Balance</span><span className="text-xl font-bold">{fmt(p?.kshana_account?.balance)}</span></div>
             </CardContent>
@@ -201,27 +221,32 @@ const Partnership = () => {
 
         {/* Tabs for managing entries */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="bg-[#F7F2EB] rounded-xl p-1">
+          <TabsList className="bg-[#F7F2EB] rounded-xl p-1 flex-wrap h-auto gap-1">
             <TabsTrigger value="chandana" className="rounded-lg data-[state=active]:bg-[#C05C3B] data-[state=active]:text-white">Chandana</TabsTrigger>
             <TabsTrigger value="akanksha" className="rounded-lg data-[state=active]:bg-[#D19B5A] data-[state=active]:text-white">Akanksha</TabsTrigger>
-            <TabsTrigger value="kshana" className="rounded-lg data-[state=active]:bg-[#7A8B99] data-[state=active]:text-white">Kshana Account</TabsTrigger>
+            <TabsTrigger value="kshana_outgoing" className="rounded-lg data-[state=active]:bg-[#7A8B99] data-[state=active]:text-white">Kshana (Out)</TabsTrigger>
+            <TabsTrigger value="kshana_income" className="rounded-lg data-[state=active]:bg-[#7E8B76] data-[state=active]:text-white">Kshana (UPI)</TabsTrigger>
+            <TabsTrigger value="cash_income" className="rounded-lg data-[state=active]:bg-[#B8854A] data-[state=active]:text-white">Cash</TabsTrigger>
           </TabsList>
 
-          {["chandana", "akanksha", "kshana"].map((tab) => (
+          {Object.entries(TAB_CONFIG).map(([tab, cfg]) => (
             <TabsContent key={tab} value={tab} className="mt-4">
               <Card className="bg-white border-[#EFEBE4]">
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="font-['Cormorant_Garamond'] text-xl text-[#2D2420]">
-                    {tab === "chandana" ? "Chandana's Investments" : tab === "akanksha" ? "Akanksha's Investments" : "Kshana Outgoing Payments"}
-                  </CardTitle>
+                  <CardTitle className="font-['Cormorant_Garamond'] text-xl text-[#2D2420]">{cfg.title}</CardTitle>
                   <Button onClick={openAdd} className="bg-[#C05C3B] hover:bg-[#A84C2F] text-white rounded-full px-4" data-testid={`add-${tab}-entry`}>
-                    <Plus className="w-4 h-4 mr-1" />{tab === "kshana" ? "Add Outgoing" : "Add Record"}
+                    <Plus className="w-4 h-4 mr-1" />{cfg.btnText}
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  {tab === "kshana" && (
+                  {(tab === "kshana_income" || tab === "cash_income") && (
                     <div className="mb-4 p-3 bg-[#7E8B76]/10 rounded-xl text-sm text-[#5C504A]">
-                      Income is auto-linked from order payments. Below shows outgoing payments from Kshana SBI account.
+                      {tab === "kshana_income" ? "UPI customer payments flowing into the Kshana bank account." : "Cash payments received from customers."}
+                    </div>
+                  )}
+                  {tab === "kshana_outgoing" && (
+                    <div className="mb-4 p-3 bg-[#7E8B76]/10 rounded-xl text-sm text-[#5C504A]">
+                      Outgoing payments from Kshana SBI account (worker salaries, materials, etc.)
                     </div>
                   )}
                   <div className="space-y-2">
@@ -232,15 +257,17 @@ const Partnership = () => {
                             <span className="font-medium text-[#2D2420] text-sm">{e.reason}</span>
                             {e.order && e.order !== "NA" && <span className="text-xs bg-white px-1.5 py-0.5 rounded text-[#8A7D76]">#{e.order}</span>}
                           </div>
-                          <div className="flex items-center gap-3 text-xs text-[#8A7D76] mt-1">
+                          <div className="flex items-center gap-3 text-xs text-[#8A7D76] mt-1 flex-wrap">
                             <span>{fmtDate(e.date)}</span>
-                            <span>To: {e.paid_to}</span>
+                            <span>{(tab === "kshana_income" || tab === "cash_income") ? `From: ${e.paid_to}` : `To: ${e.paid_to}`}</span>
                             <span className="capitalize px-1.5 py-0.5 bg-white rounded">{e.mode}</span>
                             {e.comments && <span className="italic">{e.comments}</span>}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 ml-3">
-                          <span className="font-semibold text-sm whitespace-nowrap">{fmt(e[amountField])}</span>
+                          <span className={`font-semibold text-sm whitespace-nowrap ${(tab === "kshana_income" || tab === "cash_income") ? "text-[#7E8B76]" : ""}`}>
+                            {fmt(e[amountField])}
+                          </span>
                           <Button variant="ghost" size="sm" onClick={() => openEdit(e)} className="text-[#5C504A] hover:text-[#C05C3B] p-1"><Edit className="w-4 h-4" /></Button>
                           <Button variant="ghost" size="sm" onClick={() => handleDelete(e.id)} className="text-[#B85450] hover:text-[#B85450]/80 p-1"><Trash2 className="w-4 h-4" /></Button>
                         </div>
@@ -272,10 +299,12 @@ const Partnership = () => {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="space-y-2"><Label>Chandana</Label><Input type="number" value={form.chandana} onChange={(e) => setForm({...form, chandana: parseFloat(e.target.value) || 0})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
               <div className="space-y-2"><Label>Akanksha</Label><Input type="number" value={form.akanksha} onChange={(e) => setForm({...form, akanksha: parseFloat(e.target.value) || 0})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
-              <div className="space-y-2"><Label>SBI Account</Label><Input type="number" value={form.sbi} onChange={(e) => setForm({...form, sbi: parseFloat(e.target.value) || 0})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
+              <div className="space-y-2"><Label>SBI (Out)</Label><Input type="number" value={form.sbi} onChange={(e) => setForm({...form, sbi: parseFloat(e.target.value) || 0})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
+              <div className="space-y-2"><Label>Kshana (UPI In)</Label><Input type="number" value={form.kshana} onChange={(e) => setForm({...form, kshana: parseFloat(e.target.value) || 0})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
+              <div className="space-y-2"><Label>Cash (In)</Label><Input type="number" value={form.cash} onChange={(e) => setForm({...form, cash: parseFloat(e.target.value) || 0})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
             </div>
             <div className="space-y-2"><Label>Comments</Label><Input value={form.comments} onChange={(e) => setForm({...form, comments: e.target.value})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
           </div>
