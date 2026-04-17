@@ -111,7 +111,7 @@ const Partnership = () => {
 
   const TAB_CONFIG = {
     chandana: { label: "Chandana", title: "Chandana's Investments", btnText: "Add Record", color: "bg-[#C05C3B]" },
-    akanksha: { label: "Akanksha", title: "Akanksha's Investments", btnText: "Add Record", color: "bg-[#D19B5A]" },
+    akanksha: { label: "Akankasha", title: "Akankasha's Investments", btnText: "Add Record", color: "bg-[#D19B5A]" },
     kshana_outgoing: { label: "Kshana (Out)", title: "Kshana Outgoing Payments", btnText: "Add Outgoing", color: "bg-[#7A8B99]" },
     kshana_income: { label: "Kshana (UPI)", title: "Kshana UPI Income", btnText: "Add UPI Income", color: "bg-[#7E8B76]" },
     cash_income: { label: "Cash", title: "Cash Income", btnText: "Add Cash Income", color: "bg-[#B8854A]" },
@@ -137,7 +137,7 @@ const Partnership = () => {
           </Card>
           <Card className="bg-gradient-to-br from-[#D19B5A] to-[#B8854A] text-white">
             <CardContent className="p-6 space-y-2">
-              <p className="text-lg font-semibold">Akanksha</p>
+              <p className="text-lg font-semibold">Akankasha</p>
               <div className="flex justify-between text-sm"><span className="text-white/80">Invested</span><span className="font-semibold">{fmt(p?.akanksha?.total_invested)}</span></div>
               <div className="flex justify-between text-sm"><span className="text-white/80">Profit Share</span><span className="font-semibold">{fmt(p?.akanksha?.profit_share)}</span></div>
               <div className="flex justify-between border-t border-white/20 pt-2"><span className="text-white/80">Total Gets</span><span className="text-xl font-bold">{fmt(p?.akanksha?.total_gets)}</span></div>
@@ -174,12 +174,12 @@ const Partnership = () => {
                     <tr className="bg-[#F7F2EB]">
                       <th className="py-2 px-2 text-left text-[#5C504A] text-xs">Month</th>
                       <th className="py-2 px-2 text-right text-[#C05C3B] text-xs">Chandana Inv.</th>
-                      <th className="py-2 px-2 text-right text-[#D19B5A] text-xs">Akanksha Inv.</th>
+                      <th className="py-2 px-2 text-right text-[#D19B5A] text-xs">Akankasha Inv.</th>
                       <th className="py-2 px-2 text-right text-[#7E8B76] text-xs">Income</th>
                       <th className="py-2 px-2 text-right text-[#7A8B99] text-xs">SBI Out</th>
                       <th className="py-2 px-2 text-right text-[#2D2420] text-xs">Pool</th>
                       <th className="py-2 px-2 text-right text-[#C05C3B] text-xs">Chandana Gets</th>
-                      <th className="py-2 px-2 text-right text-[#D19B5A] text-xs">Akanksha Gets</th>
+                      <th className="py-2 px-2 text-right text-[#D19B5A] text-xs">Akankasha Gets</th>
                     </tr>
                   </thead>
                   <tbody>{p.monthly.map((m, i) => (
@@ -214,7 +214,7 @@ const Partnership = () => {
                 <div className="mt-4 p-3 bg-[#F7F2EB] rounded-xl text-sm">
                   <p className="font-medium text-[#5C504A] mb-1">Withdrawals from Kshana Account:</p>
                   {p.chandana.withdrawals > 0 && <p className="text-[#C05C3B]">Chandana withdrew: {fmt(p.chandana.withdrawals)}</p>}
-                  {p.akanksha.withdrawals > 0 && <p className="text-[#D19B5A]">Akanksha withdrew: {fmt(p.akanksha.withdrawals)}</p>}
+                  {p.akanksha.withdrawals > 0 && <p className="text-[#D19B5A]">Akankasha withdrew: {fmt(p.akanksha.withdrawals)}</p>}
                 </div>
               )}
             </CardContent>
@@ -225,7 +225,7 @@ const Partnership = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="bg-[#F7F2EB] rounded-xl p-1 flex-wrap h-auto gap-1">
             <TabsTrigger value="chandana" className="rounded-lg data-[state=active]:bg-[#C05C3B] data-[state=active]:text-white">Chandana</TabsTrigger>
-            <TabsTrigger value="akanksha" className="rounded-lg data-[state=active]:bg-[#D19B5A] data-[state=active]:text-white">Akanksha</TabsTrigger>
+            <TabsTrigger value="akanksha" className="rounded-lg data-[state=active]:bg-[#D19B5A] data-[state=active]:text-white">Akankasha</TabsTrigger>
             <TabsTrigger value="kshana_outgoing" className="rounded-lg data-[state=active]:bg-[#7A8B99] data-[state=active]:text-white">Kshana (Out)</TabsTrigger>
             <TabsTrigger value="kshana_income" className="rounded-lg data-[state=active]:bg-[#7E8B76] data-[state=active]:text-white">Kshana (UPI)</TabsTrigger>
             <TabsTrigger value="cash_income" className="rounded-lg data-[state=active]:bg-[#B8854A] data-[state=active]:text-white">Cash</TabsTrigger>
@@ -303,7 +303,7 @@ const Partnership = () => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="space-y-2"><Label>Chandana</Label><Input type="number" value={form.chandana} onChange={(e) => setForm({...form, chandana: parseFloat(e.target.value) || 0})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
-              <div className="space-y-2"><Label>Akanksha</Label><Input type="number" value={form.akanksha} onChange={(e) => setForm({...form, akanksha: parseFloat(e.target.value) || 0})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
+              <div className="space-y-2"><Label>Akankasha</Label><Input type="number" value={form.akanksha} onChange={(e) => setForm({...form, akanksha: parseFloat(e.target.value) || 0})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
               <div className="space-y-2"><Label>SBI (Out)</Label><Input type="number" value={form.sbi} onChange={(e) => setForm({...form, sbi: parseFloat(e.target.value) || 0})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
               <div className="space-y-2"><Label>Kshana (UPI In)</Label><Input type="number" value={form.kshana} onChange={(e) => setForm({...form, kshana: parseFloat(e.target.value) || 0})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
               <div className="space-y-2"><Label>Cash (In)</Label><Input type="number" value={form.cash} onChange={(e) => setForm({...form, cash: parseFloat(e.target.value) || 0})} className="bg-[#F7F2EB] border-transparent rounded-xl" /></div>
