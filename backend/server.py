@@ -1981,12 +1981,11 @@ async def seed_production_data(secret: str = ""):
         payments = [{"amount": o["total"], "date": o["delivery"] or "2026-02-01", "mode": "cash", "notes": "Full payment"}] if o["paid"] and o["total"] > 0 else []
         balance = 0 if o["paid"] else o["total"]
         
-        # Use realistic created_at: 7 days before delivery, or fallback to order-based date
+        # Use delivery date as created_at for historical bulk-imported orders
         order_created = now
         if o.get("delivery"):
             try:
-                dd = datetime.strptime(o["delivery"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                order_created = (dd - timedelta(days=7)).isoformat()
+                order_created = datetime.strptime(o["delivery"], "%Y-%m-%d").replace(tzinfo=timezone.utc).isoformat()
             except:
                 order_created = now
         
