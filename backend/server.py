@@ -37,7 +37,7 @@ else:
 def put_object(path: str, data: bytes, content_type: str) -> dict:
     """Upload file to Cloudinary"""
     if not CLOUDINARY_URL:
-        raise HTTPException(status_code=500, detail="Storage not configured. Set CLOUDINARY_URL.")
+        raise Exception("Storage not configured. Set CLOUDINARY_URL.")
     import io
     result = cloudinary.uploader.upload(
         io.BytesIO(data),
@@ -45,7 +45,7 @@ def put_object(path: str, data: bytes, content_type: str) -> dict:
         resource_type="auto",
         folder="kshana-contour"
     )
-    return {"url": result["secure_url"], "public_id": result["public_id"]}
+    return {"url": result["secure_url"], "public_id": result["public_id"], "path": result.get("public_id", path)}
 
 def get_object(path: str) -> tuple:
     """Get file URL from Cloudinary (redirect to URL instead of proxying)"""
@@ -94,6 +94,8 @@ app.add_middleware(
     allow_origins=origins_list,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # Create a router with the /api prefix
@@ -1179,7 +1181,7 @@ async def upload_gallery_image(file: UploadFile = File(...), title: str = "Untit
         gallery_doc = {
             "title": title,
             "image_url": image_url,
-            "storage_path": result["path"],
+            "storage_path": result.get("path", path),
             "category": category,
             "file_id": file_id,
             "created_at": datetime.now(timezone.utc).isoformat()
@@ -1188,7 +1190,7 @@ async def upload_gallery_image(file: UploadFile = File(...), title: str = "Untit
         return {"id": str(insert_result.inserted_id), "image_url": image_url, "message": "Image uploaded"}
     except Exception as e:
         logger.error(f"Gallery upload failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to upload image")
+        raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
 
 @api_router.get("/gallery/image/{file_id}")
 async def get_gallery_image(file_id: str):
