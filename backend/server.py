@@ -1297,6 +1297,63 @@ async def get_gallery_image(file_id: str):
         raise HTTPException(status_code=500, detail="Failed to load image")
 
 
+@api_router.get("/gallery/cloudinary-config")
+async def get_cloudinary_config(request: Request):
+    """Return Cloudinary upload config for direct browser upload"""
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    if not CLOUDINARY_URL:
+        raise HTTPException(status_code=500, detail="Cloudinary not configured")
+    
+    import time, hashlib
+    timestamp = int(time.time())
+    cloud_name = cloudinary.config().cloud_name
+    api_key = cloudinary.config().api_key
+    api_secret = cloudinary.config().api_secret
+    folder = "kshana-contour/gallery"
+    
+    # Generate signature
+    params = f"folder={folder}&timestamp={timestamp}{api_secret}"
+    signature = hashlib.sha1(params.encode()).hexdigest()
+    
+    return {
+        "cloud_name": cloud_name,
+        "api_key": api_key,
+        "signature": signature,
+        "timestamp": timestamp,
+        "folder": folder
+    }
+
+@api_router.post("/gallery/save")
+async def save_gallery_image(request: Request):
+    """Save a Cloudinary-uploaded image URL to gallery"""
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    body = await request.json()
+    image_url = body.get("image_url")
+    title = body.get("title", "Untitled")
+    category = body.get("category", "")
+    public_id = body.get("public_id", "")
+    
+    if not image_url:
+        raise HTTPException(status_code=400, detail="image_url required")
+    
+    file_id = str(uuid.uuid4())
+    gallery_doc = {
+        "title": title,
+        "image_url": image_url,
+        "storage_path": public_id,
+        "category": category,
+        "file_id": file_id,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    result = await db.gallery.insert_one(gallery_doc)
+    return {"id": str(result.inserted_id), "image_url": image_url, "message": "Image saved to gallery"}
+
+
 # ============== REVIEWS ENDPOINTS ==============
 @api_router.get("/reviews")
 async def get_reviews():

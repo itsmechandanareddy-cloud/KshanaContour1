@@ -49,21 +49,41 @@ const Gallery = () => {
     setUploading(true);
     try {
       const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Step 1: Get Cloudinary upload config (small JSON request - fast)
+      const configRes = await axios.get(`${API}/gallery/cloudinary-config`, { headers });
+      const { cloud_name, api_key, signature, timestamp, folder } = configRes.data;
+
+      // Step 2: Upload directly to Cloudinary (bypasses Render completely)
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("title", newTitle);
-      formData.append("category", newCategory);
+      formData.append("api_key", api_key);
+      formData.append("signature", signature);
+      formData.append("timestamp", timestamp);
+      formData.append("folder", folder);
 
-      await axios.post(`${API}/gallery/upload`, formData, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
-      });
+      const uploadRes = await axios.post(
+        `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
+        formData
+      );
+
+      // Step 3: Save the URL to our database (small JSON request - fast)
+      await axios.post(`${API}/gallery/save`, {
+        image_url: uploadRes.data.secure_url,
+        public_id: uploadRes.data.public_id,
+        title: newTitle,
+        category: newCategory
+      }, { headers });
+
       toast.success("Image uploaded to gallery");
       setShowAddModal(false);
       setNewTitle("");
       setNewCategory("");
       fetchGallery();
     } catch (error) {
-      toast.error("Failed to upload image");
+      const msg = error.response?.data?.detail || error.response?.data?.error?.message || "Failed to upload image";
+      toast.error(msg);
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
