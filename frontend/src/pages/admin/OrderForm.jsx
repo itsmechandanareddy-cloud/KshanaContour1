@@ -10,8 +10,15 @@ import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
-import { ArrowLeft, Plus, Trash2, IndianRupee, Save, Printer, Upload, X, Image as ImageIcon, FileText } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, IndianRupee, Save, Printer, Upload, X, Image as ImageIcon, FileText, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+
+const STATUS_OPTIONS = [
+  { value: "pending", label: "Pending", color: "#C05C3B" },
+  { value: "in_progress", label: "In Progress", color: "#D19B5A" },
+  { value: "ready", label: "Ready", color: "#7E8B76" },
+  { value: "delivered", label: "Delivered", color: "#2D2420" },
+];
 
 const SERVICE_TYPES = [
   "Bridal blouses",
@@ -379,7 +386,27 @@ const OrderForm = () => {
               {isEdit ? `Order #${orderId}` : "Create New Order"}
             </h1>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {isEdit && existingOrder && (
+              <select
+                value={existingOrder.status || "pending"}
+                onChange={async (e) => {
+                  const newStatus = e.target.value;
+                  try {
+                    const token = localStorage.getItem("token");
+                    await axios.put(`${API}/orders/${orderId}/status?status=${newStatus}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+                    setExistingOrder({ ...existingOrder, status: newStatus });
+                    toast.success(`Status updated to ${STATUS_OPTIONS.find(s => s.value === newStatus)?.label}`);
+                  } catch { toast.error("Failed to update status"); }
+                }}
+                className="h-10 px-3 text-sm bg-[#F7F2EB] border border-[#EFEBE4] rounded-full cursor-pointer focus:outline-none focus:border-[#C05C3B]"
+                data-testid="order-status-select"
+              >
+                {STATUS_OPTIONS.map(s => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            )}
             {isEdit && (
               <Button
                 type="button"

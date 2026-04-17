@@ -265,6 +265,26 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-[#B85450] font-medium">{order.days_until} day(s)</span>
+                  <select
+                    value={order.status || "pending"}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={async (e) => {
+                      const newStatus = e.target.value;
+                      try {
+                        const token = localStorage.getItem("token");
+                        await axios.put(`${API}/orders/${order.order_id}/status?status=${newStatus}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+                        toast.success(`${order.order_id} → ${newStatus.replace("_"," ")}`);
+                        fetchAll();
+                      } catch { toast.error("Failed"); }
+                    }}
+                    className="h-7 px-2 text-xs bg-transparent border border-[#B85450]/30 rounded cursor-pointer text-[#2D2420] focus:outline-none"
+                    data-testid={`urgent-status-${order.order_id}`}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="ready">Ready</option>
+                    <option value="delivered">Delivered</option>
+                  </select>
                   <Button size="sm" variant="ghost" onClick={() => navigate(`/admin/orders/${order.order_id}`)} className="text-[#B85450] hover:bg-[#B85450]/10 h-7 px-2">
                     <Eye className="w-3.5 h-3.5" />
                   </Button>
