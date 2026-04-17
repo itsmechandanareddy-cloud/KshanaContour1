@@ -9,7 +9,7 @@ import {
   Plus, ShoppingBag, Calendar, IndianRupee, Clock,
   AlertTriangle, TrendingUp, Package, Users, Star,
   Scissors, Image as ImageIcon, FileText, BarChart3,
-  ArrowRight, Eye, Printer, Handshake, Download
+  ArrowRight, Eye, Printer, Handshake, Download, RefreshCw
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState("");
+  const [openStatusMenu, setOpenStatusMenu] = useState(null);
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -255,42 +256,70 @@ const Dashboard = () => {
         {stats?.due_soon?.length > 0 && (
           <div className="border border-[#B85450]/20 bg-[#B85450]/5 p-4 space-y-2">
             <p className="text-[10px] uppercase tracking-[0.2em] text-[#B85450] font-medium">Urgent Deliveries</p>
-            {stats.due_soon.map((order, idx) => (
-              <div key={idx} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <AlertTriangle className="w-4 h-4 text-[#B85450]" />
-                  <span className="text-sm text-[#2D2420]">
-                    <span className="font-medium">#{order.order_id}</span> — {order.customer_name}
-                  </span>
+            {stats.due_soon.map((order, idx) => {
+              const statusConfig = {
+                pending: { label: "Pending", color: "#C05C3B", bg: "bg-[#C05C3B]" },
+                in_progress: { label: "In Progress", color: "#D19B5A", bg: "bg-[#D19B5A]" },
+                ready: { label: "Ready", color: "#7E8B76", bg: "bg-[#7E8B76]" },
+                delivered: { label: "Delivered", color: "#2D2420", bg: "bg-[#2D2420]" },
+              };
+              const current = statusConfig[order.status] || statusConfig.pending;
+              const isOpen = openStatusMenu === order.order_id;
+
+              return (
+                <div key={idx} className="flex items-center justify-between group">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-4 h-4 text-[#B85450]" />
+                    <span className="text-sm text-[#2D2420]">
+                      <span className="font-medium">#{order.order_id}</span> — {order.customer_name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[#B85450] font-medium">{order.days_until} day(s)</span>
+                    {/* Status dot with popover */}
+                    <div className="relative">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setOpenStatusMenu(isOpen ? null : order.order_id); }}
+                        className="flex items-center gap-1.5 h-7 px-2.5 rounded-full border border-[#EFEBE4] bg-white hover:shadow-md transition-all"
+                        data-testid={`urgent-status-${order.order_id}`}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${current.bg}`} />
+                        <span className="text-[10px] uppercase tracking-wider text-[#5C504A]">{current.label}</span>
+                      </button>
+                      {isOpen && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setOpenStatusMenu(null)} />
+                          <div className="absolute right-0 top-9 z-50 bg-white border border-[#EFEBE4] shadow-xl rounded-sm overflow-hidden min-w-[140px] animate-fade-in">
+                            {Object.entries(statusConfig).map(([key, cfg]) => (
+                              <button key={key}
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  setOpenStatusMenu(null);
+                                  if (key === order.status) return;
+                                  try {
+                                    const token = localStorage.getItem("token");
+                                    await axios.put(`${API}/orders/${order.order_id}/status?status=${key}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+                                    toast.success(`${order.order_id} → ${cfg.label}`);
+                                    fetchAll();
+                                  } catch { toast.error("Failed"); }
+                                }}
+                                className={`w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-[#F7F2EB] transition-colors ${key === order.status ? "bg-[#F7F2EB]" : ""}`}
+                              >
+                                <span className={`w-2 h-2 rounded-full ${cfg.bg}`} />
+                                <span className="text-xs text-[#2D2420]">{cfg.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={() => navigate(`/admin/orders/${order.order_id}`)} className="text-[#B85450] hover:bg-[#B85450]/10 h-7 px-2">
+                      <Eye className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#B85450] font-medium">{order.days_until} day(s)</span>
-                  <select
-                    value={order.status || "pending"}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={async (e) => {
-                      const newStatus = e.target.value;
-                      try {
-                        const token = localStorage.getItem("token");
-                        await axios.put(`${API}/orders/${order.order_id}/status?status=${newStatus}`, {}, { headers: { Authorization: `Bearer ${token}` } });
-                        toast.success(`${order.order_id} → ${newStatus.replace("_"," ")}`);
-                        fetchAll();
-                      } catch { toast.error("Failed"); }
-                    }}
-                    className="h-7 px-2 text-xs bg-transparent border border-[#B85450]/30 rounded cursor-pointer text-[#2D2420] focus:outline-none"
-                    data-testid={`urgent-status-${order.order_id}`}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="ready">Ready</option>
-                    <option value="delivered">Delivered</option>
-                  </select>
-                  <Button size="sm" variant="ghost" onClick={() => navigate(`/admin/orders/${order.order_id}`)} className="text-[#B85450] hover:bg-[#B85450]/10 h-7 px-2">
-                    <Eye className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
