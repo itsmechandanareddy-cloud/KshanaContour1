@@ -11,6 +11,9 @@ import bcrypt
 import jwt
 import requests
 import uuid
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -33,6 +36,43 @@ if CLOUDINARY_URL:
     logger.info("Cloudinary storage initialized successfully")
 else:
     logger.warning("CLOUDINARY_URL not set - file uploads disabled")
+
+# ============== GMAIL SMTP CONFIG ==============
+GMAIL_EMAIL = os.environ.get("GMAIL_EMAIL", "kshanaconture@gmail.com")
+GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "")
+
+# In-memory store for verification codes (code -> {admin_id, expires_at})
+verification_codes = {}
+
+def send_verification_email(code: str):
+    """Send 6-digit verification code to Kshana email via Gmail SMTP"""
+    if not GMAIL_APP_PASSWORD:
+        raise Exception("Gmail App Password not configured. Set GMAIL_APP_PASSWORD in environment.")
+    
+    msg = MIMEMultipart()
+    msg["From"] = GMAIL_EMAIL
+    msg["To"] = GMAIL_EMAIL
+    msg["Subject"] = "Kshana Contour - Password Change Verification"
+    
+    body = f"""
+    <div style="font-family: 'Georgia', serif; max-width: 500px; margin: 0 auto; padding: 30px; background: #FDFBF7; border: 1px solid #EFEBE4;">
+        <h2 style="color: #2D2420; font-weight: 400; margin-bottom: 20px;">Kshana Contour</h2>
+        <p style="color: #5C504A; font-size: 14px;">A password change was requested for your admin account.</p>
+        <div style="background: #2D2420; color: #D19B5A; text-align: center; padding: 20px; margin: 20px 0; font-size: 32px; letter-spacing: 8px; font-weight: bold;">
+            {code}
+        </div>
+        <p style="color: #8A7D76; font-size: 12px;">This code expires in 10 minutes. If you didn't request this, ignore this email.</p>
+    </div>
+    """
+    msg.attach(MIMEText(body, "html"))
+    
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(GMAIL_EMAIL, GMAIL_APP_PASSWORD)
+        server.send_message(msg)
+    
+    logger.info(f"Verification code sent to {GMAIL_EMAIL}")
+
+
 
 def put_object(path: str, data: bytes, content_type: str) -> dict:
     """Upload file to Cloudinary"""
@@ -338,19 +378,71 @@ async def admin_login(data: AdminLogin, response: Response):
     }
 
 
-@api_router.put("/auth/admin/update-credentials")
-async def update_admin_credentials(data: AdminUpdateCredentials, request: Request):
+@api_router.post("/auth/admin/send-verification-code")
+async def send_admin_verification_code(request: Request):
+    """Send a 6-digit verification code to Kshana email for password change"""
     user = await get_current_user(request)
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
+    
+    body = await request.json()
+    current_password = body.get("current_password", "")
+    if not current_password:
+        raise HTTPException(status_code=400, detail="Current password required")
+    
     admin = await db.admins.find_one({"_id": ObjectId(user["_id"])})
-    if not admin or not verify_password(data.current_password, admin["password_hash"]):
+    if not admin or not verify_password(current_password, admin["password_hash"]):
         raise HTTPException(status_code=401, detail="Current password is incorrect")
+    
+    code = str(secrets.randbelow(900000) + 100000)
+    verification_codes[user["_id"]] = {
+        "code": code,
+        "expires_at": datetime.now(timezone.utc) + timedelta(minutes=10)
+    }
+    
+    try:
+        send_verification_email(code)
+    except Exception as e:
+        logger.error(f"Failed to send verification email: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+    
+    return {"message": "Verification code sent to Kshana email"}
+
+
+@api_router.put("/auth/admin/update-credentials")
+async def update_admin_credentials(request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    body = await request.json()
+    current_password = body.get("current_password", "")
+    verification_code = body.get("verification_code", "")
+    new_phone = body.get("new_phone", "")
+    new_password = body.get("new_password", "")
+    
+    admin = await db.admins.find_one({"_id": ObjectId(user["_id"])})
+    if not admin or not verify_password(current_password, admin["password_hash"]):
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+    
+    # Verify the email code
+    stored = verification_codes.get(user["_id"])
+    if not stored:
+        raise HTTPException(status_code=400, detail="No verification code sent. Send code first.")
+    if stored["expires_at"] < datetime.now(timezone.utc):
+        verification_codes.pop(user["_id"], None)
+        raise HTTPException(status_code=400, detail="Verification code expired. Request a new one.")
+    if stored["code"] != verification_code:
+        raise HTTPException(status_code=400, detail="Invalid verification code")
+    
+    # Code is valid - clear it
+    verification_codes.pop(user["_id"], None)
+    
     update = {}
-    if data.new_phone:
-        update["phone"] = data.new_phone
-    if data.new_password:
-        update["password_hash"] = hash_password(data.new_password)
+    if new_phone:
+        update["phone"] = new_phone
+    if new_password:
+        update["password_hash"] = hash_password(new_password)
     if not update:
         raise HTTPException(status_code=400, detail="No changes provided")
     await db.admins.update_one({"_id": admin["_id"]}, {"$set": update})
