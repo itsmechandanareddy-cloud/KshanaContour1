@@ -2016,6 +2016,139 @@ async def seed_production_data(secret: str = ""):
         await db.partnership.insert_many(income_entries)
         results["income_entries"] = len(income_entries)
     
+    # ===== PARTNERSHIP EXPENSE DATA (Chandana/Akanksha investments + SBI outgoing) =====
+    await db.partnership.delete_many({"type": {"$ne": "income"}})
+    expense_entries = [
+        {"date":"2026-01-02","order":"NA","reason":"SIM Cards","paid_to":"Airtel","chandana":300,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-02","order":"NA","reason":"CC camera","paid_to":"Amazon","chandana":4199,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-02","order":"1","reason":"Kuchchu","paid_to":"Ramaa","chandana":0,"akanksha":1350,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-06","order":"1","reason":"Kuchchu","paid_to":"Ramaa","chandana":450,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-06","order":"NA","reason":"Tabrez Flight ticket","paid_to":"NA","chandana":0,"akanksha":9551,"sbi":0,"mode":"Card","comments":"","type":"expense"},
+        {"date":"2026-01-14","order":"NA","reason":"Shop interior","paid_to":"Arun","chandana":20000,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-21","order":"NA","reason":"Shop interior","paid_to":"Arun","chandana":20000,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-19","order":"NA","reason":"Ceiling fan","paid_to":"Amazon","chandana":0,"akanksha":2000,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Sofa stitching","paid_to":"Harshith","chandana":1000,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Sofa cloth","paid_to":"Mohammed Rafi","chandana":4000,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Shop Interior","paid_to":"Arun","chandana":20000,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Shop essentials (Storage organizers)","paid_to":"Blinkit","chandana":1251,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Shop essentials (Storage bags)","paid_to":"Blinkit","chandana":1328,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Shop essentials (Cleaning)","paid_to":"Blinkit","chandana":2049,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Shop essentials (Extension boxes)","paid_to":"Blinkit","chandana":1030,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Shop essentials","paid_to":"Blinkit","chandana":1543,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Shop essentials","paid_to":"Blinkit","chandana":2853,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Shop essentials","paid_to":"Blinkit","chandana":1890,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Shop essentials","paid_to":"Blinkit","chandana":1947,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Wifi","paid_to":"Atria Convergence","chandana":1979,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-27","order":"NA","reason":"Agreement, fruits and flowers","paid_to":"Srinivasa Reddy","chandana":3000,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-28","order":"NA","reason":"Pooja","paid_to":"Anand Swamy","chandana":5000,"akanksha":0,"sbi":0,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-01-28","order":"NA","reason":"Food","paid_to":"Nandhini","chandana":4700,"akanksha":0,"sbi":0,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-01-29","order":"NA","reason":"Owner advance","paid_to":"Shop Owner","chandana":0,"akanksha":50000,"sbi":0,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-01-29","order":"NA","reason":"Tabrez","paid_to":"Shop","chandana":50000,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-29","order":"NA","reason":"Tabrez","paid_to":"Shop","chandana":0,"akanksha":100000,"sbi":0,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-01-30","order":"NA","reason":"Tabrez","paid_to":"Shop","chandana":50000,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-30","order":"NA","reason":"Tabrez Room advance","paid_to":"Room advance","chandana":40000,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-28","order":"NA","reason":"Shop essentials (Containers, Dust bin)","paid_to":"Zepto","chandana":0,"akanksha":1788,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-01-28","order":"NA","reason":"Name board","paid_to":"Preeti Dodmani","chandana":0,"akanksha":4500,"sbi":0,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-01-28","order":"NA","reason":"Sweets for pooja","paid_to":"Swiggy","chandana":0,"akanksha":1089,"sbi":0,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-01-28","order":"NA","reason":"Fan for boutique","paid_to":"Amazon","chandana":0,"akanksha":2000,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-02","order":"NA","reason":"Name board rectification","paid_to":"Preeti Dodmani","chandana":0,"akanksha":600,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-07","order":"NA","reason":"Ragib Payment","paid_to":"Ragib","chandana":0,"akanksha":8500,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-03","order":"NA","reason":"Shop Rent - February","paid_to":"Venkatanarayana","chandana":0,"akanksha":12000,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-07","order":"NA","reason":"Tabrez - lining and other material","paid_to":"Tabrez","chandana":0,"akanksha":2000,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-07","order":"NA","reason":"Tabrez - Varsha blouse workers payment","paid_to":"Tabrez","chandana":0,"akanksha":15000,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-07","order":"NA","reason":"Tahseen - Salary","paid_to":"Tahseen","chandana":0,"akanksha":5500,"sbi":0,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-02-08","order":"4,5,12,19","reason":"Worker Salary Feb 1st week","paid_to":"Tabrez","chandana":0,"akanksha":5700,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-10","order":"12,14,15,32","reason":"Falls, Kuchchu and Zigzag (Nagaratna redo)","paid_to":"Anitha","chandana":0,"akanksha":1250,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-15","order":"NA","reason":"Ragib Payment","paid_to":"Ragib","chandana":0,"akanksha":0,"sbi":5600,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-15","order":"NA","reason":"Bill books","paid_to":"Ranjith","chandana":0,"akanksha":3750,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-15","order":"NA","reason":"Tahseen - Salary","paid_to":"Srinivasa Reddy","chandana":0,"akanksha":0,"sbi":5500,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-16","order":"19,18,23","reason":"Worker Salary Feb 2nd week + Material","paid_to":"Tabrez","chandana":0,"akanksha":0,"sbi":9667,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-18","order":"NA","reason":"Shop Interior","paid_to":"Arun","chandana":20000,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-18","order":"NA","reason":"Falls, Kuchchu and Zigzag","paid_to":"Anitha","chandana":0,"akanksha":0,"sbi":500,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-02-19","order":"NA","reason":"Falls Zig+Zag","paid_to":"Anitha","chandana":0,"akanksha":350,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-23","order":"23,13,33,30,41","reason":"Worker salary Feb 3rd week","paid_to":"Tabrez","chandana":0,"akanksha":0,"sbi":6080,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-23","order":"NA","reason":"Blouse cutting","paid_to":"Tabrez","chandana":0,"akanksha":0,"sbi":3332,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-23","order":"NA","reason":"Blouse cutting","paid_to":"Tabrez","chandana":0,"akanksha":0,"sbi":3000,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-02-27","order":"NA","reason":"Blouse cutting","paid_to":"Tabrez","chandana":0,"akanksha":0,"sbi":850,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-02-27","order":"NA","reason":"Dad Salary","paid_to":"Srinivasa Reddy","chandana":0,"akanksha":0,"sbi":10000,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-03-02","order":"NA","reason":"Falls, Kuchchu and Zigzag","paid_to":"Anitha","chandana":0,"akanksha":0,"sbi":1130,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-03-02","order":"NA","reason":"Blouse cutting","paid_to":"Tabrez","chandana":0,"akanksha":0,"sbi":3022,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-03-02","order":"NA","reason":"Blouse cutting","paid_to":"Tabrez","chandana":0,"akanksha":0,"sbi":866,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-02-23","order":"NA","reason":"Tahseen - Salary","paid_to":"Srinivasa Reddy","chandana":0,"akanksha":0,"sbi":5500,"mode":"UPI","comments":"2000 Cash + 1500 UPI","type":"expense"},
+        {"date":"2026-03-09","order":"NA","reason":"Worker room rent","paid_to":"Tabrez","chandana":0,"akanksha":0,"sbi":8000,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-03-09","order":"NA","reason":"Tahseen - Salary","paid_to":"Srinivasa Reddy","chandana":0,"akanksha":0,"sbi":5500,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-03-09","order":"NA","reason":"Materials - Market","paid_to":"Srinivasa Reddy","chandana":0,"akanksha":0,"sbi":7800,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-03-09","order":"NA","reason":"Blouse cutting","paid_to":"Tabrez","chandana":0,"akanksha":0,"sbi":4660,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-03-09","order":"NA","reason":"Falls, Kuchchu and Zigzag","paid_to":"Anitha","chandana":0,"akanksha":0,"sbi":1330,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-03-11","order":"NA","reason":"Worker salary March 1st week","paid_to":"Tabrez","chandana":0,"akanksha":0,"sbi":5130,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-03-11","order":"NA","reason":"Tabrez","paid_to":"Srinivasa Reddy","chandana":100000,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-03-16","order":"NA","reason":"Shop interior","paid_to":"Arun","chandana":10000,"akanksha":0,"sbi":0,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-03-17","order":"NA","reason":"Falls, Kuchchu and Zigzag","paid_to":"Anitha","chandana":0,"akanksha":0,"sbi":850,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-03-17","order":"NA","reason":"Worker salary March 2nd week","paid_to":"Tabrez","chandana":0,"akanksha":0,"sbi":1805,"mode":"UPI","comments":"","type":"expense"},
+        {"date":"2026-03-17","order":"NA","reason":"Tahseen - Salary","paid_to":"Srinivasa Reddy","chandana":0,"akanksha":0,"sbi":5500,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-03-17","order":"NA","reason":"Khadim - tailor","paid_to":"Srinivasa Reddy","chandana":0,"akanksha":0,"sbi":1500,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-03-17","order":"NA","reason":"Hathik - worker","paid_to":"Srinivasa Reddy","chandana":0,"akanksha":0,"sbi":1000,"mode":"Cash","comments":"","type":"expense"},
+        {"date":"2026-03-17","order":"NA","reason":"Lining and other material","paid_to":"Srinivasa Reddy","chandana":0,"akanksha":0,"sbi":1000,"mode":"Cash","comments":"","type":"expense"},
+    ]
+    await db.partnership.insert_many(expense_entries)
+    results["expense_entries"] = len(expense_entries)
+    
+    # ===== SEED EMPLOYEES WITH PAYMENT RECORDS =====
+    await db.employees.delete_many({})
+    employees_data = [
+        {"name":"Tabrez","role":"Master","phone":"","pay_type":"weekly","salary":0,"payments":[
+            {"amount":15000,"date":"2026-02-07","mode":"UPI","notes":"Varsha blouse workers payment"},
+            {"amount":2000,"date":"2026-02-07","mode":"UPI","notes":"Lining and other material"},
+            {"amount":5700,"date":"2026-02-08","mode":"UPI","notes":"Worker Salary Feb 1st week - KSH-04,05,12,19"},
+            {"amount":9667,"date":"2026-02-16","mode":"UPI","notes":"Worker Salary Feb 2nd week + Material - KSH-19,18,23"},
+            {"amount":6080,"date":"2026-02-23","mode":"UPI","notes":"Worker salary Feb 3rd week - KSH-23,13,33,30,41"},
+            {"amount":3332,"date":"2026-02-23","mode":"UPI","notes":"Blouse cutting"},
+            {"amount":3000,"date":"2026-02-23","mode":"Cash","notes":"Blouse cutting"},
+            {"amount":850,"date":"2026-02-27","mode":"Cash","notes":"Blouse cutting"},
+            {"amount":3022,"date":"2026-03-02","mode":"UPI","notes":"Blouse cutting"},
+            {"amount":866,"date":"2026-03-02","mode":"UPI","notes":"Blouse cutting"},
+            {"amount":8000,"date":"2026-03-09","mode":"UPI","notes":"Worker room rent"},
+            {"amount":4660,"date":"2026-03-09","mode":"UPI","notes":"Blouse cutting"},
+            {"amount":5130,"date":"2026-03-11","mode":"UPI","notes":"Worker salary March 1st week"},
+            {"amount":1805,"date":"2026-03-17","mode":"UPI","notes":"Worker salary March 2nd week"},
+        ]},
+        {"name":"Tahseen","role":"Worker","phone":"","pay_type":"monthly","salary":5500,"payments":[
+            {"amount":5500,"date":"2026-02-07","mode":"Cash","notes":"Salary - Feb 1st"},
+            {"amount":5500,"date":"2026-02-15","mode":"UPI","notes":"Salary - Feb 2nd (via Srinivasa Reddy)"},
+            {"amount":5500,"date":"2026-02-23","mode":"UPI","notes":"Salary (2000 Cash + 1500 UPI via Srinivasa Reddy)"},
+            {"amount":5500,"date":"2026-03-09","mode":"UPI","notes":"Salary - Mar (via Srinivasa Reddy)"},
+            {"amount":5500,"date":"2026-03-17","mode":"Cash","notes":"Salary - Mar 2nd (via Srinivasa Reddy)"},
+        ]},
+        {"name":"Ragib","role":"Worker","phone":"","pay_type":"monthly","salary":0,"payments":[
+            {"amount":8500,"date":"2026-02-07","mode":"UPI","notes":"Payment"},
+            {"amount":5600,"date":"2026-02-15","mode":"UPI","notes":"Payment (from SBI)"},
+        ]},
+        {"name":"Anitha","role":"Worker","phone":"","pay_type":"weekly","salary":0,"payments":[
+            {"amount":1250,"date":"2026-02-10","mode":"UPI","notes":"Falls, Kuchchu, Zigzag - KSH-12,14,15,32"},
+            {"amount":500,"date":"2026-02-18","mode":"Cash","notes":"Falls, Kuchchu, Zigzag"},
+            {"amount":350,"date":"2026-02-19","mode":"UPI","notes":"Falls Zig+Zag"},
+            {"amount":1130,"date":"2026-03-02","mode":"UPI","notes":"Falls, Kuchchu, Zigzag"},
+            {"amount":1330,"date":"2026-03-09","mode":"UPI","notes":"Falls, Kuchchu, Zigzag"},
+            {"amount":850,"date":"2026-03-17","mode":"UPI","notes":"Falls, Kuchchu, Zigzag"},
+        ]},
+        {"name":"Khadim","role":"Tailor","phone":"","pay_type":"monthly","salary":0,"payments":[
+            {"amount":1500,"date":"2026-03-17","mode":"Cash","notes":"Tailor payment (via Srinivasa Reddy)"},
+        ]},
+        {"name":"Hathik","role":"Worker","phone":"","pay_type":"monthly","salary":0,"payments":[
+            {"amount":1000,"date":"2026-03-17","mode":"Cash","notes":"Worker payment (via Srinivasa Reddy)"},
+        ]},
+        {"name":"Srinivasa Reddy","role":"Manager","phone":"","pay_type":"monthly","salary":10000,"payments":[
+            {"amount":10000,"date":"2026-02-27","mode":"UPI","notes":"Dad Salary"},
+            {"amount":7800,"date":"2026-03-09","mode":"Cash","notes":"Materials - Market"},
+        ]},
+        {"name":"Ranjith","role":"Worker","phone":"","pay_type":"monthly","salary":0,"payments":[
+            {"amount":3750,"date":"2026-02-15","mode":"UPI","notes":"Bill books"},
+        ]},
+    ]
+    for emp in employees_data:
+        await db.employees.insert_one({"name":emp["name"],"role":emp["role"],"phone":emp["phone"],"pay_type":emp["pay_type"],"salary":emp["salary"],"payments":emp["payments"],"documents":[],"created_at":now})
+    results["employees_created"] = len(employees_data)
+    
     return {"status": "success", "results": results}
 
 # ============== STARTUP EVENT ==============
