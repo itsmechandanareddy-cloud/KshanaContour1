@@ -224,12 +224,22 @@ const Dashboard = () => {
 
           {/* Key Metrics Row */}
           <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-px mt-10 bg-[#FDFBF7]/10">
-            {[
-              { label: "Monthly Orders", value: stats?.monthly_orders || 0, icon: ShoppingBag, color: "#D19B5A" },
-              { label: "Monthly Revenue", value: fmt(stats?.monthly_income || 0), icon: IndianRupee, color: "#7E8B76" },
-              { label: "Weekly Orders", value: stats?.weekly_orders || 0, icon: Calendar, color: "#C05C3B" },
-              { label: "Weekly Revenue", value: fmt(stats?.weekly_income || 0), icon: TrendingUp, color: "#D19B5A" },
-            ].map(({ label, value, icon: Icon, color }) => (
+            {(() => {
+              const now = new Date();
+              const monthName = now.toLocaleDateString("en-IN", { month: "long" });
+              const weekStart = new Date(now);
+              weekStart.setDate(now.getDate() - now.getDay() + 1);
+              const weekEnd = new Date(weekStart);
+              weekEnd.setDate(weekStart.getDate() + 6);
+              const wsFmt = `${String(weekStart.getDate()).padStart(2,"0")}/${String(weekStart.getMonth()+1).padStart(2,"0")}`;
+              const weFmt = `${String(weekEnd.getDate()).padStart(2,"0")}/${String(weekEnd.getMonth()+1).padStart(2,"0")}`;
+              return [
+                { label: `${monthName} Orders`, value: stats?.monthly_orders || 0, icon: ShoppingBag, color: "#D19B5A" },
+                { label: `${monthName} Revenue`, value: fmt(stats?.monthly_income || 0), icon: IndianRupee, color: "#7E8B76" },
+                { label: `${wsFmt} - ${weFmt} Orders`, value: stats?.weekly_orders || 0, icon: Calendar, color: "#C05C3B" },
+                { label: `${wsFmt} - ${weFmt} Revenue`, value: fmt(stats?.weekly_income || 0), icon: TrendingUp, color: "#D19B5A" },
+              ];
+            })().map(({ label, value, icon: Icon, color }) => (
               <div key={label} className="bg-[#2D2420] p-5 lg:p-6">
                 <div className="flex items-center gap-3">
                   <Icon className="w-4 h-4" style={{ color }} strokeWidth={1.5} />

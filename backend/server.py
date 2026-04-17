@@ -1981,7 +1981,16 @@ async def seed_production_data(secret: str = ""):
         payments = [{"amount": o["total"], "date": o["delivery"] or "2026-02-01", "mode": "cash", "notes": "Full payment"}] if o["paid"] and o["total"] > 0 else []
         balance = 0 if o["paid"] else o["total"]
         
-        await db.orders.insert_one({"order_id": order_id, "customer_id": customer_id, "customer_name": o["name"], "customer_phone": o["phone"], "customer_email": "", "items": items, "measurements": {}, "subtotal": o["total"], "tax_percentage": 0, "tax_amount": 0, "total": o["total"], "payments": payments, "balance": balance, "status": o["status"], "delivery_date": o.get("delivery") or "", "description": "", "created_at": now, "images": []})
+        # Use realistic created_at: 7 days before delivery, or fallback to order-based date
+        order_created = now
+        if o.get("delivery"):
+            try:
+                dd = datetime.strptime(o["delivery"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                order_created = (dd - timedelta(days=7)).isoformat()
+            except:
+                order_created = now
+        
+        await db.orders.insert_one({"order_id": order_id, "customer_id": customer_id, "customer_name": o["name"], "customer_phone": o["phone"], "customer_email": "", "items": items, "measurements": {}, "subtotal": o["total"], "tax_percentage": 0, "tax_amount": 0, "total": o["total"], "payments": payments, "balance": balance, "status": o["status"], "delivery_date": o.get("delivery") or "", "description": "", "created_at": order_created, "images": []})
         results["orders_created"] += 1
     
     # ===== INCOME PAYMENTS =====
