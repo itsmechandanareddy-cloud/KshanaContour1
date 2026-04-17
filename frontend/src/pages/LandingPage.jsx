@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { 
   Phone, Mail, MapPin, Instagram, MessageCircle, 
-  User, ShieldCheck, Star, Scissors, ArrowRight
+  User, ShieldCheck, Star, Scissors, ArrowRight, Download, Share2, X
 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -20,6 +20,17 @@ const LandingPage = () => {
   const [reviews, setReviews] = useState([]);
   const [gallery, setGallery] = useState([]);
   const [slideIndex, setSlideIndex] = useState(0);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  // Detect if not installed as PWA and on mobile
+  useEffect(() => {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const dismissed = sessionStorage.getItem("installBannerDismissed");
+    if (!isStandalone && !dismissed) {
+      setTimeout(() => setShowInstallBanner(true), 3000);
+    }
+  }, []);
 
   useEffect(() => {
     axios.get(`${API}/reviews`).then(r => setReviews(r.data)).catch(() => {});
@@ -341,6 +352,89 @@ const LandingPage = () => {
               <ShieldCheck className="w-5 h-5 text-[#D19B5A]" strokeWidth={1.5} />
               <span className="text-xs uppercase tracking-[0.15em]">Admin Portal</span>
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Install App Banner */}
+      {showInstallBanner && (
+        <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:max-w-sm z-50 animate-fade-in">
+          <div className="bg-[#2D2420] rounded-sm p-4 shadow-2xl border border-[#D19B5A]/20">
+            <button onClick={() => { setShowInstallBanner(false); sessionStorage.setItem("installBannerDismissed", "1"); }}
+              className="absolute top-2 right-2 text-[#FDFBF7]/40 hover:text-[#FDFBF7]">
+              <X className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-[#D19B5A]/20 rounded-sm flex items-center justify-center flex-shrink-0">
+                <Download className="w-6 h-6 text-[#D19B5A]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[#FDFBF7]">Install Kshana App</p>
+                <p className="text-[10px] text-[#FDFBF7]/50 mt-0.5">Add to home screen for quick access</p>
+              </div>
+              <button onClick={() => { setShowInstallBanner(false); setShowInstallGuide(true); }}
+                className="px-4 py-2 bg-[#D19B5A] text-[#2D2420] text-xs uppercase tracking-wider font-medium rounded-sm hover:bg-[#C05C3B] hover:text-white transition-colors"
+                data-testid="install-app-btn">
+                Install
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Install Guide Modal */}
+      <Dialog open={showInstallGuide} onOpenChange={setShowInstallGuide}>
+        <DialogContent className="sm:max-w-md bg-[#FDFBF7] border-[#2D2420]/10 rounded-none p-0 overflow-hidden">
+          <div className="bg-[#2D2420] p-6 text-center">
+            <Download className="w-8 h-8 text-[#D19B5A] mx-auto mb-3" />
+            <h2 className="font-['Cormorant_Garamond'] text-2xl text-[#FDFBF7] font-light">Install Kshana App</h2>
+            <p className="text-xs text-[#FDFBF7]/50 mt-1 uppercase tracking-wider">Free &middot; No App Store needed</p>
+          </div>
+          <div className="p-6 space-y-5">
+            {/* iOS Instructions */}
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#8A7D76] mb-3">iPhone / iPad (Safari)</p>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 bg-[#2D2420] text-[#D19B5A] rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0">1</span>
+                  <p className="text-sm text-[#2D2420]">Tap the <Share2 className="w-4 h-4 inline text-[#C05C3B]" /> <b>Share</b> button at the bottom of Safari</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 bg-[#2D2420] text-[#D19B5A] rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0">2</span>
+                  <p className="text-sm text-[#2D2420]">Scroll down and tap <b>"Add to Home Screen"</b></p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 bg-[#2D2420] text-[#D19B5A] rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0">3</span>
+                  <p className="text-sm text-[#2D2420]">Tap <b>"Add"</b> — the Kshana app icon appears on your home screen</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-[#EFEBE4]" />
+
+            {/* Android Instructions */}
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#8A7D76] mb-3">Android (Chrome)</p>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 bg-[#2D2420] text-[#D19B5A] rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0">1</span>
+                  <p className="text-sm text-[#2D2420]">Tap the <b>three dots menu</b> (top-right in Chrome)</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 bg-[#2D2420] text-[#D19B5A] rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0">2</span>
+                  <p className="text-sm text-[#2D2420]">Tap <b>"Install app"</b> or <b>"Add to Home Screen"</b></p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="w-6 h-6 bg-[#2D2420] text-[#D19B5A] rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0">3</span>
+                  <p className="text-sm text-[#2D2420]">Tap <b>"Install"</b> — done!</p>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={() => setShowInstallGuide(false)}
+              className="w-full py-3 bg-[#2D2420] text-[#FDFBF7] text-xs uppercase tracking-[0.15em] hover:bg-[#C05C3B] transition-colors">
+              Got it
+            </button>
           </div>
         </DialogContent>
       </Dialog>
