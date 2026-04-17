@@ -72,27 +72,29 @@ const LandingPage = () => {
   const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7]" style={{ fontFamily: "'Manrope', sans-serif" }}>
+    <div className="min-h-screen bg-[#FDFBF7] overflow-x-hidden" style={{ fontFamily: "'Manrope', sans-serif" }}>
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 bg-[#FDFBF7]/90 backdrop-blur-sm z-50 border-b border-[#2D2420]/10">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img src={LOGO_URL} alt="Kshana Contour" className="h-12 w-12 object-contain" />
-            <span className="font-['Cormorant_Garamond'] text-xl font-light text-[#2D2420] hidden sm:block tracking-wide">Kshana Contour</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-3 sm:py-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src={LOGO_URL} alt="Kshana Contour" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" />
+            <span className="font-['Cormorant_Garamond'] text-lg sm:text-xl font-light text-[#2D2420] tracking-wide">Kshana Contour</span>
           </div>
-          <div className="hidden md:flex items-center gap-10">
-            {["about", "gallery", "services", "contact"].map((s) => (
-              <button key={s} onClick={() => scrollTo(s)}
-                className="text-xs uppercase tracking-[0.2em] text-[#2D2420]/60 hover:text-[#2D2420] transition-colors duration-300">
-                {s}
-              </button>
-            ))}
+          <div className="flex items-center gap-4 sm:gap-10">
+            <div className="hidden md:flex items-center gap-10">
+              {["about", "gallery", "services", "contact"].map((s) => (
+                <button key={s} onClick={() => scrollTo(s)}
+                  className="text-xs uppercase tracking-[0.2em] text-[#2D2420]/60 hover:text-[#2D2420] transition-colors duration-300">
+                  {s}
+                </button>
+              ))}
+            </div>
+            <Button onClick={() => setShowLoginModal(true)}
+              className="bg-[#2D2420] hover:bg-[#2D2420]/90 text-[#FDFBF7] rounded-none px-4 sm:px-6 py-2 text-[10px] sm:text-xs uppercase tracking-[0.15em] transition-all duration-300"
+              data-testid="login-button">
+              Login
+            </Button>
           </div>
-          <Button onClick={() => setShowLoginModal(true)}
-            className="bg-[#2D2420] hover:bg-[#2D2420]/90 text-[#FDFBF7] rounded-none px-6 py-2 text-xs uppercase tracking-[0.15em] transition-all duration-300"
-            data-testid="login-button">
-            Login
-          </Button>
         </div>
       </nav>
 
@@ -101,7 +103,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-12 w-full grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-8 py-20 lg:py-32">
             <p className="text-xs uppercase tracking-[0.3em] text-[#D19B5A]">Bespoke Tailoring</p>
-            <h1 className="font-['Cormorant_Garamond'] text-6xl md:text-7xl lg:text-8xl font-light text-[#2D2420] leading-[0.9]">
+            <h1 className="font-['Cormorant_Garamond'] text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-light text-[#2D2420] leading-[0.9]">
               Kshana<br />Contour
             </h1>
             <div className="w-16 h-px bg-[#D19B5A]" />
