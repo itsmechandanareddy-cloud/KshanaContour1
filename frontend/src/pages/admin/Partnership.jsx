@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API } from "../../App";
 import AdminLayout from "../../components/AdminLayout";
@@ -15,6 +16,7 @@ import { toast } from "sonner";
 const MODES = ["UPI", "Cash", "Card", "Bank Transfer"];
 
 const Partnership = () => {
+  const navigate = useNavigate();
   const [report, setReport] = useState(null);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -255,7 +257,7 @@ const Partnership = () => {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-[#2D2420] text-sm">{e.reason}</span>
-                            {e.order && e.order !== "NA" && <span className="text-xs bg-white px-1.5 py-0.5 rounded text-[#8A7D76]">#{e.order}</span>}
+                            {e.order && e.order !== "NA" && <span className="text-xs bg-white px-1.5 py-0.5 rounded text-[#C05C3B] cursor-pointer hover:bg-[#C05C3B]/10 transition-colors" onClick={(ev) => { ev.stopPropagation(); const oid = e.order.includes("&") ? e.order.split("&")[0].trim() : e.order; navigate(`/admin/orders/${oid}`); }}>#{e.order}</span>}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-[#8A7D76] mt-1 flex-wrap">
                             <span>{fmtDate(e.date)}</span>

@@ -569,7 +569,25 @@ async def create_order(data: OrderCreate, request: Request):
     
     await db.orders.insert_one(order_doc)
     
-    # TODO: Send SMS notification
+    # Auto-create Partnership income entry for advance payment
+    if data.advance_amount > 0 and data.advance_date:
+        adv_mode = (data.advance_mode or "cash").upper()
+        is_upi = adv_mode in ["UPI", "UPI + CASH", "CARD", "BANK TRANSFER"]
+        is_cash = adv_mode in ["CASH"]
+        items_desc = ", ".join([i.description or i.service_type for i in data.items[:2]])
+        await db.partnership.insert_one({
+            "date": data.advance_date,
+            "order": order_id,
+            "reason": f"Customer Payment - {items_desc}" if items_desc else "Customer Payment",
+            "paid_to": data.customer_name,
+            "chandana": 0, "akanksha": 0, "sbi": 0,
+            "kshana": data.advance_amount if is_upi else 0,
+            "cash": data.advance_amount if is_cash else 0,
+            "mode": adv_mode,
+            "comments": "Advance payment",
+            "type": "income"
+        })
+    
     logger.info(f"Order {order_id} created for {data.customer_name}")
     
     return {"order_id": order_id, "message": "Order created successfully"}
@@ -663,7 +681,27 @@ async def add_payment(order_id: str, data: PaymentUpdate, request: Request):
         }
     )
     
-    # TODO: Send SMS if fully paid
+    # Auto-create Partnership income entry (UPI → kshana, Cash → cash)
+    mode_upper = (data.mode or "").upper()
+    is_upi = mode_upper in ["UPI", "UPI + CASH", "CARD", "BANK TRANSFER"]
+    is_cash = mode_upper in ["CASH"]
+    customer_name = order.get("customer_name", "")
+    items_desc = ", ".join([i.get("description", i.get("service_type", "")) for i in order.get("items", [])[:2]])
+    
+    partnership_entry = {
+        "date": data.date,
+        "order": order_id,
+        "reason": f"Customer Payment - {items_desc}" if items_desc else "Customer Payment",
+        "paid_to": customer_name,
+        "chandana": 0, "akanksha": 0, "sbi": 0,
+        "kshana": data.amount if is_upi else 0,
+        "cash": data.amount if is_cash else 0,
+        "mode": mode_upper,
+        "comments": data.notes or ("Full payment" if new_balance <= 0 else "Partial payment"),
+        "type": "income"
+    }
+    await db.partnership.insert_one(partnership_entry)
+    
     if new_balance <= 0:
         logger.info(f"Order {order_id} fully paid")
     
