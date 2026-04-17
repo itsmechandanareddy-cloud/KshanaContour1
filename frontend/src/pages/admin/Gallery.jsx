@@ -106,6 +106,7 @@ const Gallery = () => {
   };
 
   const getImageSrc = (item) => {
+    if (item.image_url && item.image_url.startsWith("http")) return item.image_url;
     if (item.file_id) return `${API}/gallery/image/${item.file_id}`;
     return item.image_url;
   };

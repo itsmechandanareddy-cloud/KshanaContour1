@@ -20,7 +20,7 @@ const CustomerHome = () => {
     axios.get(`${API}/gallery`).then(r => {
       const items = r.data.map(g => ({
         id: g.id,
-        image_url: g.file_id ? `${API}/gallery/image/${g.file_id}` : g.image_url,
+        image_url: (g.image_url && g.image_url.startsWith("http")) ? g.image_url : (g.file_id ? `${API}/gallery/image/${g.file_id}` : g.image_url),
         title: g.title
       }));
       setGallery(items);
